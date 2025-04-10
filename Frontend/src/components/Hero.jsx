@@ -16,16 +16,15 @@ export default function Hero() {
           and more!
         </p>
         <button className="group relative overflow-hidden bg-transparent text-xl text-white px-8 py-3 rounded-full font-semibold transition duration-500">
-          {/* Growing border */}
-          <span className="absolute inset-0 border border-white opacity-100 rounded-full transform scale-100 group-hover:scale-110 transition-transform duration-500"></span>
+
+          <span className="absolute inset-0 border-2 border-white opacity-100 rounded-full transform scale-100 group-hover:scale-110 transition-transform duration-500"></span>
           
-          {/* Paint fill effect */}
-          <span className="absolute inset-0 bg-green-600 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out rounded-full"></span>
+          <span className="absolute inset-0 bg-green-600  transform translate-y-full group-hover:translate-y-0 transition-transform duration-150 ease-out rounded-full"></span>
           
-          {/* Button text */}
           <span className="relative z-10 transition duration-300 group-hover:text-white">
             Buy now
           </span>
+
         </button>
       </div>
     </div>
