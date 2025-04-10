@@ -29,7 +29,7 @@ export default function App() {
       </div>
 
       <div className="flex items-center justify-center w-full h-full">
-        <div className="backdrop-blur-sm bg-green-700/90 drop-shadow-2xl/50 rounded-3xl shadow-xl w-full h-full max-w-[90%] max-h-[90vh] flex flex-col md:py-[1rem]">
+        <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl shadow-xl w-full h-full max-w-[90%] max-h-[90vh] flex flex-col md:py-[1rem]">
           <Navbar />
           <Hero />
         </div>
