@@ -16,7 +16,6 @@ export default function App() {
         }}
       />
 
-      {/* Leaf image positioned at bottom right with hover animation */}
       <div 
         className="absolute bottom-10 right-0 z-10"
         onMouseEnter={() => setIsHovering(true)}
@@ -36,11 +35,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* Add CSS for the right-pivoted leaf shake animation */}
       <style jsx>{`
         .leaf-shake-right-pivot {
           animation: shake-from-right 1s ease-in-out ;
-          transform-origin: right bottom; /* Set pivot point to right bottom */
+          transform-origin: right bottom; 
         }
         
         @keyframes shake-from-right {

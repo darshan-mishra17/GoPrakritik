@@ -11,16 +11,19 @@ export default function Navbar() {
         />
       </div>
       <div className="flex gap-16 text-white text-lg md:px-24">
-        <a href="#" className="hover:underline">
-          Shop
-        </a>
-        <a href="#" className="hover:underline">
-          About
-        </a>
-        <a href="#" className="hover:underline">
-          Cart
-        </a>
+        <NavLink href="#" text="Shop" />
+        <NavLink href="#" text="About" />
+        <NavLink href="#" text="Cart" />
       </div>
     </div>
+  );
+}
+
+function NavLink({ href, text }) {
+  return (
+    <a href={href} className="relative group">
+      <span className="block">{text}</span>
+      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-100 group-hover:w-full"></span>
+    </a>
   );
 }
