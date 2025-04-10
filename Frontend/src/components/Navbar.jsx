@@ -13,9 +13,9 @@ export default function Navbar() {
       </div>
 
       <div className="flex gap-16 text-white text-lg md:px-24">
-        <NavLink href="#" text="Shop" />
-        <NavLink href="#" text="About" />
-        <NavLink href="#" text="Cart" />
+        <NavLink href="/shop" text="Shop" />
+        <NavLink href="/about" text="About" />
+        <NavLink href="/cart" text="Cart" />
       </div>
     </div>
   );
