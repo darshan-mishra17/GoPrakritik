@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./styles.css";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 export default function App() {
   const [isHovering, setIsHovering] = useState(false);
