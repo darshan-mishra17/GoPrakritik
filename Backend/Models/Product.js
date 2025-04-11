@@ -1,34 +1,47 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
 
-const benefitSchema = new mongoose.Schema({
-  description: String
+// Sub-schema for pricing variants
+const priceVariantSchema = new Schema({
+  unit: { type: String, required: true }, // e.g., "1 L", "500g"
+  price: { type: Number, required: true }
 });
 
-const pricingSchema = new mongoose.Schema({
-  quantity: String,
-  price: Number
+// Sub-schema for benefits
+const benefitSchema = new Schema({
+  description: { type: String, required: true }
 });
 
-const productSchema = new mongoose.Schema({
+// Main product schema
+const productSchema = new Schema({
   productName: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
-  productDescription: {
-    type: String,
-    required: true
-  },
-  benefits: [benefitSchema],
-  organicProcessingMethod: String,
-  traditionalMethods: String,
-  usage: String,
-  pricing: [pricingSchema],
   category: {
     type: String,
-    enum: ['Dairy', 'Spices', 'Herbs', 'Sweeteners', 'Seasonings', 'Personal Care'],
+    enum: ['Dairy', 'Spice', 'Herbal', 'Sweetener', 'Seasoning', 'Personal Care'],
     required: true
   },
-  images: [String],
+  description: {
+    type: String,
+    required: true
+  },
+  priceVariants: [priceVariantSchema],
+  benefits: [benefitSchema],
+  organicProcessingMethod: {
+    type: String,
+    required: true
+  },
+  traditionalMethods: {
+    type: String,
+    required: true
+  },
+  usage: {
+    type: String,
+    required: true
+  },
   isFeatured: {
     type: Boolean,
     default: false
@@ -41,6 +54,32 @@ const productSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, { timestamps: true });
+
+// For products with variant benefits like spices
+const variantBenefitSchema = new Schema({
+  variantName: { type: String, required: true }, // e.g., "chilli", "turmeric"
+  benefits: [benefitSchema]
 });
 
-module.exports = mongoose.model('Product', productSchema);
+const spiceProductSchema = new Schema({
+  ...productSchema.obj,
+  variantBenefits: [variantBenefitSchema]
+});
+
+// For attar/perfume products
+const attarProductSchema = new Schema({
+  ...productSchema.obj,
+  fragranceNotes: [String],
+  intensity: {
+    type: String,
+    enum: ['Light', 'Medium', 'Strong']
+  }
+});
+
+// Create models
+const Product = mongoose.model('Product', productSchema);
+const SpiceProduct = Product.discriminator('SpiceProduct', spiceProductSchema);
+const AttarProduct = Product.discriminator('AttarProduct', attarProductSchema);
+
+export { Product, SpiceProduct, AttarProduct };
