@@ -25,7 +25,7 @@ export default function App() {
         
         {isHomePage && (
           <div
-            className="absolute bottom-10 right-0 z-10"
+            className="absolute bottom-10 right-[-2px] z-10"
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
