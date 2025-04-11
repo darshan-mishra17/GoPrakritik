@@ -1,0 +1,126 @@
+[
+    {
+      "productName": "Goat Milk",
+      "category": "Dairy",
+      "description": "Go Prakritik's Organic Goat Milk is fresh, pure, and free from artificial additives. Sourced from healthy goats raised in organic farms, our milk is a rich source of essential nutrients.",
+      "priceVariants": [
+        { "unit": "1 L", "price": 200 }
+      ],
+      "benefits": [
+        { "description": "Rich in vitamins A, B2, and D." },
+        { "description": "Easier to digest compared to cow's milk." },
+        { "description": "Helps improve skin health and boosts immunity." }
+      ],
+      "organicProcessingMethod": "The milk is collected in a clean, hygienic environment, immediately chilled to preserve its freshness, and minimally processed to retain its natural goodness.",
+      "traditionalMethods": "We follow traditional milking practices to ensure the highest quality, treating the animals with care and respect.",
+      "usage": "Consume it directly, use it in your tea or coffee, or add it to your recipes for a nutritious boost."
+    },
+    {
+      "productName": "Organic Ghee",
+      "category": "Dairy",
+      "description": "Our Organic Ghee is made from pure cow's milk, renowned for its rich aroma and flavor. It's a staple in Indian households for its numerous health benefits.",
+      "priceVariants": [
+        { "unit": "1 Kg", "price": 999 },
+        { "unit": "500g", "price": 499 }
+      ],
+      "benefits": [
+        { "description": "Promotes digestive health." },
+        { "description": "Enhances brain function." },
+        { "description": "Rich in antioxidants and healthy fats." }
+      ],
+      "organicProcessingMethod": "We use a traditional churning method to extract butter from milk, which is then simmered to produce ghee, ensuring a pure and natural product.",
+      "traditionalMethods": "The ghee is made following ancient Ayurvedic techniques, which enhance its therapeutic properties.",
+      "usage": "Use it for cooking, as a spread, or in baking to add a delicious, rich flavor to your dishes."
+    },
+    {
+      "productName": "Ashwagandha Powder",
+      "category": "Herbal",
+      "description": "Our Ashwagandha Powder is a potent adaptogen made from the finest organic ashwagandha roots, known for its rejuvenating properties.",
+      "benefits": [
+        { "description": "Reduces stress and anxiety." },
+        { "description": "Boosts energy and stamina." },
+        { "description": "Enhances cognitive function and memory." }
+      ],
+      "organicProcessingMethod": "The roots are carefully harvested, dried, and ground into a fine powder without any chemical processing.",
+      "traditionalMethods": "We adhere to Ayurvedic preparation methods to retain the maximum potency of the herb.",
+      "usage": "Mix it with warm milk or water, add it to smoothies, or use it in your cooking for a healthful boost."
+    },
+    {
+      "productName": "Organic Raw Forest Honey",
+      "category": "Sweetener",
+      "description": "Go Prakritik's Organic Raw Forest Honey is collected from the untouched forests, offering a pure, natural sweetness with a unique flavor profile.",
+      "priceVariants": [
+        { "unit": "400g", "price": 240 }
+      ],
+      "benefits": [
+        { "description": "Boosts immunity." },
+        { "description": "Rich in antioxidants." },
+        { "description": "Aids in digestion and soothes sore throats." }
+      ],
+      "organicProcessingMethod": "The honey is collected by traditional foraging methods, ensuring it is raw, unprocessed, and free from additives.",
+      "traditionalMethods": "Harvested using ancient beekeeping practices that preserve the natural enzymes and nutrients in the honey.",
+      "usage": "Use it as a natural sweetener in beverages, drizzle over desserts, or take a spoonful directly for a healthy treat."
+    },
+    {
+      "productName": "Pink Salt",
+      "category": "Seasoning",
+      "description": "Our Pink Salt is sourced from the pristine Himalayan ranges, known for its purity and mineral-rich content.",
+      "priceVariants": [
+        { "unit": "1kg", "price": 85 }
+      ],
+      "benefits": [
+        { "description": "Balances electrolytes." },
+        { "description": "Improves hydration." },
+        { "description": "Aids in detoxifying the body." }
+      ],
+      "organicProcessingMethod": "The salt is manually extracted and minimally processed to retain its natural mineral content.",
+      "traditionalMethods": "Following age-old methods, the salt is hand-mined and sun-dried to ensure its purity and quality.",
+      "usage": "Use it as a seasoning in cooking, in your bath for detoxification, or in saline solutions for a healthful cleanse."
+    },
+    {
+      "__t": "SpiceProduct",
+      "productName": "Organic Spices (Turmeric and Chilli)",
+      "category": "Spice",
+      "description": "Go Prakritik's Organic Spices include vibrant turmeric and fiery chilli, both integral to Indian cuisine. Our spices are sourced from organic farms, ensuring purity and rich flavors.",
+      "priceVariants": [
+        { "unit": "200g", "price": 80 }
+      ],
+      "variantBenefits": [
+        {
+          "variantName": "chilli",
+          "benefits": [
+            { "description": "Enhances metabolism." },
+            { "description": "Rich in vitamins A and C." },
+            { "description": "Aids in digestion." }
+          ]
+        },
+        {
+          "variantName": "turmeric",
+          "benefits": [
+            { "description": "Anti-inflammatory and antioxidant properties." },
+            { "description": "Supports joint health." },
+            { "description": "Boosts immunity." }
+          ]
+        }
+      ],
+      "organicProcessingMethod": "The turmeric and chilli are grown using sustainable farming practices, hand-harvested, sun-dried, and ground into fine powders without any chemical processing.",
+      "traditionalMethods": "We adhere to traditional stone grinding techniques to maintain the natural oils and flavors of the spices.",
+      "usage": "Add turmeric to curries, soups, and teas for its health benefits and vibrant color. Use chilli powder to spice up your dishes, from curries to marinades and sauces, for an extra kick."
+    },
+    {
+      "__t": "AttarProduct",
+      "productName": "Attar (Natural Perfume)",
+      "category": "Personal Care",
+      "description": "Go Prakritik's Attar is a luxurious natural perfume made from the finest organic ingredients. Our attars capture the essence of flowers, herbs, and spices, offering a unique and long-lasting fragrance.",
+      "benefits": [
+        { "description": "Provides a natural, long-lasting fragrance." },
+        { "description": "Free from harmful chemicals and alcohol." },
+        { "description": "Contains therapeutic properties that can enhance mood and wellbeing." }
+      ],
+      "organicProcessingMethod": "Our attars are created through a traditional steam distillation process, where flowers and herbs are distilled in copper stills to extract their pure essence.",
+      "traditionalMethods": "We use ancient perfumery techniques, ensuring the attars are free from alcohol and synthetic chemicals, preserving their natural aroma and therapeutic properties.",
+      "usage": "Apply a small amount to pulse points like the wrists, behind the ears, and the neck for a subtle, lasting fragrance. Perfect for daily wear or special occasions.",
+      "fragranceNotes": [],
+      "intensity": "Medium"
+    }
+  ]
