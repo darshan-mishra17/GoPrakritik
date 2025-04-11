@@ -36,7 +36,7 @@ export default function Home() {
         </div>
       </div>
       
-      <style jsx>{`
+      <style >{`
         .leaf-shake-right-pivot {
           animation: shake-from-right 1s ease-in-out;
           transform-origin: right bottom;
