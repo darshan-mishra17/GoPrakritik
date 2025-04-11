@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const benefitSchema = new mongoose.Schema({
   description: String
@@ -42,7 +42,5 @@ const productSchema = new mongoose.Schema({
     default: Date.now
   }
 });
-
-
 
 module.exports = mongoose.model('Product', productSchema);
