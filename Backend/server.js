@@ -1,9 +1,9 @@
-import express from 'express';  // Remove the '.js' extension
-import connectDB from './db/connection.js';  // Add .js extension for local files
+import express from 'express';
+import connectDB from './db/connection.js';  
 import dotenv from 'dotenv';
 
 import productRoutes from './Router/productRouter.js';
-
+import userRoutes from './Router/userRouter.js'
 dotenv.config();
 
 const app = express();
@@ -11,7 +11,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/products', productRoutes);
-
+app.use('/api/user',userRoutes);
 
 const PORT = process.env.PORT || 5001;
 
