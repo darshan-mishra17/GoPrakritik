@@ -209,7 +209,7 @@ export default function Shop() {
 
   const getBasePrice = (product) => {
     if (!product || !product.priceVariants || product.priceVariants.length === 0) {
-      return 'Price not available';
+      return 'NA';
     }
     return `Rs.${product.priceVariants[0].price}`;
   };
@@ -339,7 +339,7 @@ export default function Shop() {
       />
       
       <div className='flex items-center justify-center w-full h-full transition-all duration-300'>
-        <div className="backdrop-blur-sm bg-green-700/90 rounded-xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
+        <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
           <Navbar />
           
           <div className="px-2 sm:px-4 md:px-6 py-1 md:py-3">
@@ -409,37 +409,46 @@ export default function Shop() {
                         <div className="flex space-x-2 sm:space-x-4 md:space-x-6 pb-2 sm:pb-4 items-center">
                           {filteredProducts.map((product, index) => (
                             <div
-                              key={product._id}
-                              className={`product-card bg-white/10 rounded-lg p-2 sm:p-3 md:p-4 border border-white/20 flex-shrink-0 w-[300px] sm:w-[180px] md:w-72 h-[400px] md:h-[380px] fade-in`}
-                              style={{ animationDelay: `${index * 0.1}s` }}
-                              onMouseEnter={() => setHoveredCardId(product._id)}
-                              onMouseLeave={() => setHoveredCardId(null)}
-                            >
-                              <div className="w-full h-40 md:h-44 overflow-hidden mb-1 sm:mb-2 md:mb-3 rounded-lg transition-all duration-300">
+                            key={product._id}
+                            className={`product-card 
+                                        bg-white/10 
+                                        rounded-lg 
+                                        p-2 sm:p-3 md:p-4 
+                                        border border-white/20 
+                                        flex-shrink-0 
+                                        w-[90vw] sm:w-[180px] md:w-72 
+                                        h-[400px] md:h-[380px] 
+                                        fade-in`}
+                            style={{ animationDelay: `${index * 0.1}s` }}
+                            onMouseEnter={() => setHoveredCardId(product._id)}
+                            onMouseLeave={() => setHoveredCardId(null)}
+                          >
+                          
+                              <div className="w-full h-56 md:h-44 overflow-hidden my-4 sm:my-2 md:my-3 rounded-lg transition-all duration-300">
                                 <img
                                   src="./assets/testimg.png" 
                                   alt={product.productName}
                                   className={'w-full h-full object-contain transition-transform duration-500' }
                                 />
                               </div>
-                              <div className="flex justify-between items-center mb-2 sm:mb-3">
-                                <h3 className="text-base sm:text-sm md:text-lg font-semibold text-white truncate">
+                              <div className="flex justify-between items-center my-4 sm:my-3 ">
+                                <h3 className="text-xl sm:text-sm md:text-lg font-semibold text-white truncate">
                                   {product.productName}
                                 </h3>
-                                <span className="text-sm sm:text-xs md:text-base text-white">
+                                <span className="text-xl sm:text-xs md:text-base text-white">
                                   {getBasePrice(product)}
                                 </span>
                               </div>
                               
                               <div className="space-y-1 sm:space-y-2 mt-auto">
                                 <button 
-                                  className="btn-hover-effect w-full py-0.5 sm:py-1 md:py-1.5 text-sm sm:text-xs bg-transparent text-white border border-white rounded-full font-medium transition-all duration-300 hover:bg-white hover:text-green-700"
+                                  className="btn-hover-effect w-full py-0.5 sm:py-1 md:py-1.5 text-xl sm:text-xs bg-transparent text-white border border-white rounded-full font-medium transition-all duration-300 hover:bg-white hover:text-green-700"
                                   onClick={() => openSidebar(product._id, 'details')}
                                 >
                                   <span>Details</span>
                                 </button>
                                 <button 
-                                  className="btn-hover-effect w-full py-0.5 sm:py-1 md:py-1.5 text-sm sm:text-xs bg-transparent text-white border border-white rounded-full font-medium transition-all duration-300 hover:bg-white hover:text-green-700"
+                                  className="btn-hover-effect w-full py-0.5 sm:py-1 md:py-1.5 text-xl sm:text-xs bg-transparent text-white border border-white rounded-full font-medium transition-all duration-300 hover:bg-white hover:text-green-700"
                                   onClick={() => openSidebar(product._id, 'buy')}
                                 >
                                   <span>Buy Now</span>

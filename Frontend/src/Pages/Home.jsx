@@ -23,12 +23,12 @@ export default function Home() {
         <img
           src="./assets/leaves.png"
           alt="Leaf branch"
-          className={`w-[20rem] md:w-[50rem] h-auto transform-gpu ${isHovering ? 'leaf-shake-right-pivot' : ''}`}
+          className={`w-[20rem] sm:w-[18rem] md:w-[50rem] h-auto transform-gpu ${isHovering ? 'leaf-shake-right-pivot' : ''}`}
         />
       </div>
       
       <div className="flex items-center justify-center w-full h-full">
-        <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl shadow-xl w-full h-full max-w-[90%] max-h-[90vh] flex flex-col md:py-4">
+      <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
           <Navbar />
           <div className="flex-1 overflow-auto">
             <Hero />
