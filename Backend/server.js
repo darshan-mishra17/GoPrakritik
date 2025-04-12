@@ -1,5 +1,5 @@
-import express from 'express';  // Remove the '.js' extension
-import connectDB from './db/connection.js';  // Add .js extension for local files
+import express from 'express';
+import connectDB from './db/connection.js';  
 import dotenv from 'dotenv';
 
 import productRoutes from './Router/productRouter.js';
