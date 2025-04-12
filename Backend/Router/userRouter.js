@@ -1,32 +1,32 @@
 import express from 'express';
 import UserController from '../Controller/userController.js';
-import { authenticate, authorizeAdmin } from '../Middleware/authMiddleware.js';
+// import { authenticate, authorizeAdmin } from '../Middleware/authMiddleware.js';
 
 const router = express.Router();
 
 // Admin-only routes
 router.route('/')
-  .get(authenticate, authorizeAdmin, UserController.getAllUsers);
+  .get(UserController.getAllUsers);
 
 // User CRUD routes
 router.route('/:id')
-  .get(authenticate, UserController.getUserById)
-  .put(authenticate, UserController.updateUser)
-  .delete(authenticate, authorizeAdmin, UserController.deleteUser);
+  .get( UserController.getUserById)
+  .put(UserController.updateUser)
+  .delete(UserController.deleteUser);
 
 // Address management routes
 router.route('/:userId/addresses')
-  .post(authenticate, UserController.addAddress);
+  .post(UserController.addAddress);
 
 router.route('/:userId/addresses/:addressId')
-  .put(authenticate, UserController.updateAddress)
-  .delete(authenticate, UserController.deleteAddress);
+  .put(UserController.updateAddress)
+  .delete(UserController.deleteAddress);
 
 // Order history routes
 router.route('/:userId/orders')
-  .get(authenticate, UserController.getOrderHistory);
+  .get(UserController.getOrderHistory);
 
 router.route('/:userId/orders/:orderId')
-  .get(authenticate, UserController.getSingleOrder);
+  .get(UserController.getSingleOrder);
 
 export default router;
