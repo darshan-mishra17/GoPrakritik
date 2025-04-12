@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
+export default function Sidebar({ isOpen, onClose, product, sidebarType, animationClass }) {
   const [quantity, setQuantity] = useState(1);
   const [subtotal, setSubtotal] = useState(0);
   const [expandedSection, setExpandedSection] = useState(null);
@@ -46,19 +46,29 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
     <div className="flex-1 overflow-y-auto">
       <h3 className="text-xl font-semibold mb-4">Product Details</h3>
       
-      {/* Product Image */}
-      <div className="mb-6 w-[25%] h-[25%] overflow-hidden">
-        <img 
-          src={product.image} 
-          alt={product.name} 
-          className="w-full h-full object-cover rounded-lg"
-        />
+      {/* Product Image and Description - Side by Side */}
+      <div className="flex flex-row gap-4 mb-6">
+        {/* Product Image */}
+        <div className="w-1/3 sm:w-1/4 flex-shrink-0">
+          <img 
+            src={product.image} 
+            alt={product.name} 
+            className="w-full h-auto object-cover rounded-lg"
+          />
+        </div>
+        
+        {/* Product Description */}
+        <div className="flex-1">
+          {/* Added Product Name above description */}
+          <h4 className="text-lg font-medium mb-2">{product.name}</h4>
+          <p className="text-sm sm:text-base">
+            {product.description || "NA"}
+          </p>
+        </div>
       </div>
       
       {/* Details */}
       <div className="mb-6">
-        <p className="mb-4">{product.description}</p>
-        
         {/* Expandable Sections */}
         <div className="border-t border-gray-200 py-3">
           <div 
@@ -70,7 +80,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
           </div>
           {expandedSection === 'processing' && (
             <div className="mt-2 text-gray-700">
-              {product.organicProcessingMethod}
+              {product.organicProcessingMethod || "NA"}
             </div>
           )}
         </div>
@@ -85,7 +95,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
           </div>
           {expandedSection === 'traditional' && (
             <div className="mt-2 text-gray-700">
-              {product.traditionalMethods}
+              {product.traditionalMethods || "NA"}
             </div>
           )}
         </div>
@@ -107,7 +117,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-700">No benefits listed.</p>
+                <p className="text-gray-700">NA</p>
               )}
             </div>
           )}
@@ -123,7 +133,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
           </div>
           {expandedSection === 'usage' && (
             <div className="mt-2 text-gray-700">
-              {product.usage}
+              {product.usage || "NA"}
             </div>
           )}
         </div>
@@ -238,7 +248,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
     <div
       className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 md:w-1/2 lg:w-2/5 shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}
+      } ${animationClass || ''}`}
     >
       <div className="h-full p-6 flex flex-col">
         {/* Close button */}
