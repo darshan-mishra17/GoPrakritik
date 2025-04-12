@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
   const [quantity, setQuantity] = useState(1);
   const [subtotal, setSubtotal] = useState(0);
+  const [expandedSection, setExpandedSection] = useState(null);
   
   // Update subtotal when quantity or product changes
   useEffect(() => {
-    if (product) {
+    if (product && product.price) {
       // Remove 'Rs.' prefix and convert to number
       // This properly parses the price value without decimal errors
       const priceString = product.price.replace(/[^\d]/g, '');
@@ -33,6 +34,14 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
     onClose();
   };
 
+  const toggleSection = (section) => {
+    if (expandedSection === section) {
+      setExpandedSection(null);
+    } else {
+      setExpandedSection(section);
+    }
+  };
+
   const renderProductDetails = () => (
     <div className="flex-1 overflow-y-auto">
       <h3 className="text-xl font-semibold mb-4">Product Details</h3>
@@ -40,7 +49,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
       {/* Product Image */}
       <div className="mb-6 w-[25%] h-[25%] overflow-hidden">
         <img 
-          src={product.image || "/api/placeholder/200/200"} 
+          src={product.image} 
           alt={product.name} 
           className="w-full h-full object-cover rounded-lg"
         />
@@ -52,31 +61,71 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
         
         {/* Expandable Sections */}
         <div className="border-t border-gray-200 py-3">
-          <div className="flex justify-between items-center">
+          <div 
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => toggleSection('processing')}
+          >
             <span className="font-medium">Organic Processing Method</span>
-            <span>+</span>
+            <span>{expandedSection === 'processing' ? '-' : '+'}</span>
           </div>
+          {expandedSection === 'processing' && (
+            <div className="mt-2 text-gray-700">
+              {product.organicProcessingMethod}
+            </div>
+          )}
         </div>
         
         <div className="border-t border-gray-200 py-3">
-          <div className="flex justify-between items-center">
+          <div 
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => toggleSection('traditional')}
+          >
             <span className="font-medium">Traditional Methods</span>
-            <span>+</span>
+            <span>{expandedSection === 'traditional' ? '-' : '+'}</span>
           </div>
+          {expandedSection === 'traditional' && (
+            <div className="mt-2 text-gray-700">
+              {product.traditionalMethods}
+            </div>
+          )}
         </div>
         
         <div className="border-t border-gray-200 py-3">
-          <div className="flex justify-between items-center">
+          <div 
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => toggleSection('benefits')}
+          >
             <span className="font-medium">Benefits</span>
-            <span>+</span>
+            <span>{expandedSection === 'benefits' ? '-' : '+'}</span>
           </div>
+          {expandedSection === 'benefits' && (
+            <div className="mt-2">
+              {product.benefits && product.benefits.length > 0 ? (
+                <ul className="list-disc pl-5 text-gray-700">
+                  {product.benefits.map((benefit, index) => (
+                    <li key={index}>{benefit.description}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-700">No benefits listed.</p>
+              )}
+            </div>
+          )}
         </div>
         
         <div className="border-t border-b border-gray-200 py-3">
-          <div className="flex justify-between items-center">
+          <div 
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => toggleSection('usage')}
+          >
             <span className="font-medium">Usage</span>
-            <span>+</span>
+            <span>{expandedSection === 'usage' ? '-' : '+'}</span>
           </div>
+          {expandedSection === 'usage' && (
+            <div className="mt-2 text-gray-700">
+              {product.usage}
+            </div>
+          )}
         </div>
       </div>
       
@@ -108,7 +157,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
           Add to Cart
         </button>
         <button 
-          className="w-full py-3 bg-green-700 text-white rounded-full hover:bg-green-400 text-center"
+          className="w-full py-3 bg-green-700 text-white rounded-full hover:bg-green-600 text-center"
         >
           Checkout
         </button>
@@ -127,7 +176,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
             {/* Product Image */}
             <div className="w-16 h-16 border border-blue-300 rounded overflow-hidden mr-4">
               <img 
-                src={product.image || "/api/placeholder/64/64"} 
+                src={product.image} 
                 alt={product.name} 
                 className="w-full h-full object-cover"
               />
@@ -177,7 +226,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType }) {
         </div>
         
         <button 
-          className="w-full py-3 bg-gray-800 text-white rounded-full hover:bg-gray-700 text-center"
+          className="w-full py-3 bg-green-700 text-white rounded-full hover:bg-green-600 text-center"
         >
           Checkout
         </button>
