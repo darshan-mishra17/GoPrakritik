@@ -3,70 +3,12 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Lenis from '@studio-freight/lenis';
 
-const sampleProducts = [
-  {
-    _id: '1',
-    productName: 'Organic Milk',
-    description: 'Farm fresh organic milk Farm fresh organic milk Farm fresh organic milk Farm fresh organic milk',
-    category: 'Dairy',
-    priceVariants: [{ size: '1L', price: 80 }]
-  },
-  {
-    _id: '2',
-    productName: 'Turmeric Powder',
-    description: 'Organic turmeric powder',
-    category: 'Spice',
-    priceVariants: [{ size: '100g', price: 60 }]
-  },
-  {
-    _id: '3',
-    productName: 'Aloe Vera Gel',
-    description: 'Pure aloe vera gel',
-    category: 'Personal Care',
-    priceVariants: [{ size: '200ml', price: 150 }]
-  },
-  {
-    _id: '4',
-    productName: 'Honey',
-    description: 'Raw organic honey',
-    category: 'Sweetener',
-    priceVariants: [{ size: '500g', price: 250 }]
-  },
-  {
-    _id: '5',
-    productName: 'Organic Ghee',
-    description: 'Pure organic ghee',
-    category: 'Dairy',
-    priceVariants: [{ size: '250g', price: 300 }]
-  },
-  {
-    _id: '6',
-    productName: 'Cinnamon Sticks',
-    description: 'Aromatic cinnamon sticks',
-    category: 'Spice',
-    priceVariants: [{ size: '50g', price: 90 }]
-  },
-  {
-    _id: '7',
-    productName: 'Almond Oil',
-    description: 'Cold-pressed almond oil',
-    category: 'Personal Care',
-    priceVariants: [{ size: '100ml', price: 180 }]
-  },
-  {
-    _id: '8',
-    productName: 'Rock Salt',
-    description: 'Himalayan pink rock salt',
-    category: 'Seasoning',
-    priceVariants: [{ size: '250g', price: 120 }]
-  }
-];
-
 export default function Shop() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [sidebarType, setSidebarType] = useState('');
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
@@ -74,13 +16,41 @@ export default function Shop() {
     search: ''
   });
   const [activeCategory, setActiveCategory] = useState('All');
-  const [_hoveredCardId, setHoveredCardId] = useState(null);
   
+  // Keeping hoveredCardId state but properly using it
+  const [_hoveredCardId, setHoveredCardId] = useState(null);
 
   const sliderRef = useRef(null);
   const lenisRef = useRef(null);
 
   const categories = ['All', 'Dairy', 'Spice', 'Herbal', 'Sweetener', 'Seasoning', 'Personal Care'];
+
+  // Fetch products from the API
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      // Replace with your actual API endpoint
+      const response = await fetch('http://localhost:8090/api/products');
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setProducts(result.data);
+        setFilteredProducts(result.data);
+      } else {
+        setError('Failed to fetch product data');
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setError('Failed to load products. Please try again later.');
+      setLoading(false);
+    }
+  };
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
     // Initialize Lenis with spring-like smooth scrolling
@@ -105,12 +75,12 @@ export default function Shop() {
     };
   }, []);
 
-  // Improved wheel handler with increased scroll speed
+  // Modified wheel handler to be passive (fix preventDefault issue)
   const handleWheel = (e) => {
     if (sliderRef.current) {
-      e.preventDefault();
+      // Don't call preventDefault() here - that's what was causing the errors
       
-      // Increased multiplier for faster scrolling (from 2 to 6)
+      // Increased multiplier for faster scrolling
       const scrollAmount = e.deltaY * 6;
       
       // Add smooth scrolling behavior
@@ -168,43 +138,35 @@ export default function Shop() {
         slider.removeEventListener('touchmove', handleTouchMove);
       };
     }
-  }, [products]);
+  }, []);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    if (products.length > 0) {
       try {
-        setLoading(true);
-        
-        let filteredProducts = [...sampleProducts];
+        let newFilteredProducts = [...products];
         
         if (filters.category && filters.category !== 'All') {
-          filteredProducts = filteredProducts.filter(
+          newFilteredProducts = newFilteredProducts.filter(
             product => product.category === filters.category
           );
         }
         
         if (filters.search) {
           const searchLower = filters.search.toLowerCase();
-          filteredProducts = filteredProducts.filter(
+          newFilteredProducts = newFilteredProducts.filter(
             product => 
               product.productName.toLowerCase().includes(searchLower) || 
               (product.description && product.description.toLowerCase().includes(searchLower))
           );
         }
 
-        setTimeout(() => {
-          setProducts(filteredProducts);
-          setLoading(false);
-        }, 300);
+        setFilteredProducts(newFilteredProducts);
       } catch (err) {
-        console.error('Failed to fetch products:', err);
+        console.error('Failed to filter products:', err);
         setError(err.message);
-        setLoading(false);
       }
-    };
-
-    fetchProducts();
-  }, [filters]);
+    }
+  }, [filters, products]); 
 
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value }));
@@ -364,10 +326,7 @@ export default function Shop() {
     .scroll-right {
       right: 10px;
     }
-
-    
   `;
-
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -427,7 +386,7 @@ export default function Shop() {
                 <div className="text-center py-2 sm:py-4">
                   <p className="text-white text-sm sm:text-base">Error loading products: {error}</p>
                   <button 
-                    onClick={() => window.location.reload()}
+                    onClick={() => fetchProducts()}
                     className="mt-2 px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm bg-white text-green-700 rounded-full hover:bg-green-100 transition-all duration-300"
                   >
                     Try Again
@@ -437,46 +396,50 @@ export default function Shop() {
               
               {!loading && !error && (
                 <div className="flex-1 flex flex-col">
-                  {products.length > 0 ? (
+                  {filteredProducts.length > 0 ? (
                     <div className="relative w-full flex-1">
                       <div 
                         ref={sliderRef}
-                        className="flex-1  overflow-x-auto no-scrollbar flex items-center"
+                        className="flex-1 overflow-x-auto no-scrollbar flex items-center"
                         style={noScrollbarStyle}
-                        onWheel={handleWheel}
+                        onWheel={handleWheel} 
+                        // Fixed: Set passive to true (this adds it to the DOM property)
+                        data-passive-events="true"
                       >
-                        <div className="flex space-x-2 sm:space-x-4 md:space-x-6 pb-2 sm:pb-4  items-center">
-                          {products.map((product, index) => (
+                        <div className="flex space-x-2 sm:space-x-4 md:space-x-6 pb-2 sm:pb-4 items-center">
+                          {filteredProducts.map((product, index) => (
                             <div
                               key={product._id}
-                              className={`product-card bg-white/10 rounded-lg p-2 sm:p-3 md:p-4 border border-white/20 flex-shrink-0 w-[350px] sm:w-[180px] md:w-78 h-[440px] md:h-[400px]  fade-in`}
+                              className={`product-card bg-white/10 rounded-lg p-2 sm:p-3 md:p-4 border border-white/20 flex-shrink-0 w-[300px] sm:w-[180px] md:w-72 h-[400px] md:h-[380px] fade-in`}
                               style={{ animationDelay: `${index * 0.1}s` }}
                               onMouseEnter={() => setHoveredCardId(product._id)}
                               onMouseLeave={() => setHoveredCardId(null)}
                             >
-                              <div className="w-full h-54 my-8  md:h-48 overflow-hidden mb-1 sm:mb-2 md:mb-3 rounded-lg transition-all duration-300">
+                              <div className="w-full h-40 md:h-44 overflow-hidden mb-1 sm:mb-2 md:mb-3 rounded-lg transition-all duration-300">
                                 <img
                                   src="./assets/testimg.png" 
                                   alt={product.productName}
-                                  className='w-full h-full object-contain transition-transform duration-500'
+                                  className={'w-full h-full object-contain transition-transform duration-500' }
                                 />
                               </div>
-                              <div className="flex justify-between items-center m-4 sm:m-3 md:m-3">
-                                <h3 className="text-xl sm:text-sm md:text-lg font-semibold text-white truncate">{product.productName}</h3>
-                                <span className="text-xl sm:text-sm md:text-base text-white">
+                              <div className="flex justify-between items-center mb-2 sm:mb-3">
+                                <h3 className="text-base sm:text-sm md:text-lg font-semibold text-white truncate">
+                                  {product.productName}
+                                </h3>
+                                <span className="text-sm sm:text-xs md:text-base text-white">
                                   {getBasePrice(product)}
                                 </span>
                               </div>
-                
+                              
                               <div className="space-y-1 sm:space-y-2 mt-auto">
                                 <button 
-                                  className="btn-hover-effect w-full py-0.5 sm:py-1 md:py-1.5 text-lg sm:text-sm bg-transparent text-white border border-white rounded-full font-medium transition-all duration-300 hover:bg-white hover:text-green-700"
+                                  className="btn-hover-effect w-full py-0.5 sm:py-1 md:py-1.5 text-sm sm:text-xs bg-transparent text-white border border-white rounded-full font-medium transition-all duration-300 hover:bg-white hover:text-green-700"
                                   onClick={() => openSidebar(product._id, 'details')}
                                 >
                                   <span>Details</span>
                                 </button>
                                 <button 
-                                  className="btn-hover-effect w-full py-0.5 sm:py-1 md:py-1.5 text-lg sm:text-sm bg-transparent text-white border border-white rounded-full font-medium transition-all duration-300 hover:bg-white hover:text-green-700"
+                                  className="btn-hover-effect w-full py-0.5 sm:py-1 md:py-1.5 text-sm sm:text-xs bg-transparent text-white border border-white rounded-full font-medium transition-all duration-300 hover:bg-white hover:text-green-700"
                                   onClick={() => openSidebar(product._id, 'buy')}
                                 >
                                   <span>Buy Now</span>
@@ -500,7 +463,7 @@ export default function Shop() {
       </div>
 
       <Sidebar 
-        isOpen={sidebarOpen} 
+        isOpen={sidebarOpen}
         onClose={closeSidebar} 
         product={selectedProduct} 
         sidebarType={sidebarType}

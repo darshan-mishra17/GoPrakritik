@@ -1,13 +1,18 @@
 import express from 'express';
 import connectDB from './db/connection.js';  
 import dotenv from 'dotenv';
-
+import cors from 'cors';
 import productRoutes from './Router/productRouter.js';
 import userRoutes from './Router/userRouter.js'
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+
+app.use(cors({
+  origin: ['http://localhost:5173'], // Replace with your Vite app's port
+  credentials: true // If you need to send cookies
+}));
 
 // Routes
 app.use('/api/products', productRoutes);
