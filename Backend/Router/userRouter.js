@@ -1,6 +1,5 @@
 import express from 'express';
 import UserController from '../Controller/userController.js';
-// import { authenticate, authorizeAdmin } from '../Middleware/authMiddleware.js';
 
 const router = express.Router();
 
