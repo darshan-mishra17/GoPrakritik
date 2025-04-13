@@ -3,7 +3,9 @@ import connectDB from './db/connection.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import productRoutes from './Router/productRouter.js';
-import userRoutes from './Router/userRouter.js'
+import userRoutes from './Router/userRouter.js';
+import orderRoutes from './Router/orderRouter.js';
+
 dotenv.config();
 
 const app = express();
@@ -16,14 +18,16 @@ app.use(cors({
 
 // Routes
 app.use('/api/products', productRoutes);
-app.use('/api/user',userRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/order', orderRoutes);
+
 
 const PORT = process.env.PORT || 5001;
 
 // Connect to DB first, then start server
 connectDB().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {  // Fixed parameter order
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 }).catch(err => {
   console.error('Database connection failed', err);
