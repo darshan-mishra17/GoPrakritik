@@ -1,8 +1,17 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { ShoppingBag, Info, ShoppingCart } from "lucide-react";
 
-export default function Navbar() {
+export default function Navbar({ openSidebar }) {
+
+  const handleCartClick = (e) => {
+    e.preventDefault(); // Prevent default link behavior
+    if (typeof openSidebar === 'function') {
+      openSidebar(null, 'cart'); // Open sidebar with cart type, no specific product
+    } else {
+      console.error("openSidebar is not a function or not provided as a prop");
+    }
+  };
+
   return (
     <div className="flex justify-between items-center p-4">
       <div className="flex items-center">
@@ -14,10 +23,10 @@ export default function Navbar() {
           />
         </Link>
       </div>
-      
+
       <div className="flex gap-6 md:gap-12 items-center mr-2 md:mr-6">
-        <Link 
-          to="/shop" 
+        <Link
+          to="/shop"
           className="text-white text-lg relative group"
         >
           <ShoppingBag className="w-6 h-6 md:hidden" />
@@ -26,9 +35,9 @@ export default function Navbar() {
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full origin-right"></span>
           </span>
         </Link>
-        
-        <Link 
-          to="/about" 
+
+        <Link
+          to="/about"
           className="text-white text-lg relative group"
         >
           <Info className="w-6 h-6 md:hidden" />
@@ -37,17 +46,17 @@ export default function Navbar() {
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full origin-right"></span>
           </span>
         </Link>
-        
-        <Link 
-          to="/cart" 
-          className="text-white text-lg relative group"
+
+        <div 
+          className="text-white text-lg relative group cursor-pointer"
+          onClick={handleCartClick}
         >
           <ShoppingCart className="w-6 h-6 md:hidden" />
           <span className="hidden md:block relative">
             Cart
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full origin-right"></span>
           </span>
-        </Link>
+        </div>
       </div>
     </div>
   );
