@@ -17,25 +17,36 @@ export default function Shop() {
   });
   const [activeCategory, setActiveCategory] = useState('All');
   
-  // Keeping hoveredCardId state but properly using it
   const [_hoveredCardId, setHoveredCardId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(0);
 
   const sliderRef = useRef(null);
   const lenisRef = useRef(null);
 
-  const categories = ['All', 'Dairy', 'Spice', 'Herbal', 'Sweetener', 'Seasoning', 'Personal Care'];
+  const [categories, setCategories] = useState(['All']);
 
-  // Fetch products from the API
-  const fetchProducts = async () => {
+  const fetchProducts = async (queryParams = {}) => {
     try {
       setLoading(true);
-      // Replace with your actual API endpoint
-      const response = await fetch('http://localhost:8090/api/products');
+      
+      const queryString = Object.keys(queryParams)
+        .filter(key => queryParams[key])
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
+        .join('&');
+      
+      const url = `http://localhost:8075/api/products${queryString ? `?=${queryString}` : ''}`;
+      const response = await fetch(url);
       const result = await response.json();
       
       if (result.success && result.data) {
         setProducts(result.data);
         setFilteredProducts(result.data);
+        
+        if (!queryParams.category) { 
+          const uniqueCategories = ['All', ...new Set(result.data.map(product => product.category))];
+          setCategories(uniqueCategories);
+        }
       } else {
         setError('Failed to fetch product data');
       }
@@ -47,60 +58,162 @@ export default function Shop() {
     }
   };
 
-  // Initial data fetch
   useEffect(() => {
     fetchProducts();
   }, []);
 
+  // Check if device is mobile and get viewport width
   useEffect(() => {
-    // Initialize Lenis with spring-like smooth scrolling
-    lenisRef.current = new Lenis({
-      duration: 0.8, // Reduced from 1.2 for faster response
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-      infinite: false,
-    });
-
-    function raf(time) {
-      lenisRef.current.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
-
+    const checkIfMobile = () => {
+      const width = window.innerWidth;
+      setViewportWidth(width);
+      setIsMobile(width < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
     return () => {
-      if (lenisRef.current) {
-        lenisRef.current.destroy();
-      }
+      window.removeEventListener('resize', checkIfMobile);
     };
   }, []);
 
-  // Modified wheel handler to be passive (fix preventDefault issue)
-  const handleWheel = (e) => {
-    if (sliderRef.current) {
-      // Don't call preventDefault() here - that's what was causing the errors
+  useEffect(() => {
+    // Initialize Lenis smooth scrolling only for non-mobile devices
+    if (!isMobile) {
+      lenisRef.current = new Lenis({
+        duration: 0.8,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        infinite: false,
+      });
+
+      function raf(time) {
+        if (lenisRef.current) {
+          lenisRef.current.raf(time);
+        }
+        requestAnimationFrame(raf);
+      }
+
+      requestAnimationFrame(raf);
+
+      return () => {
+        if (lenisRef.current) {
+          lenisRef.current.destroy();
+        }
+      };
+    }
+  }, [isMobile]);
+
+  // Improved function to perfectly center the nearest card
+  const centerNearestCard = () => {
+    if (!sliderRef.current || !isMobile) return;
+    
+    const container = sliderRef.current;
+    const containerWidth = container.clientWidth;
+    
+    const cards = Array.from(container.querySelectorAll('.product-card'));
+    if (!cards.length) return;
+    
+    // Find the card that should be centered
+    let closestCard = null;
+    let closestDistance = Infinity;
+    
+    cards.forEach(card => {
+      const rect = card.getBoundingClientRect();
+      const cardLeftRelative = rect.left;
+      const cardCenter = cardLeftRelative + (rect.width / 2);
+      const viewportCenter = containerWidth / 2;
+      const distance = Math.abs(cardCenter - viewportCenter);
       
-      // Increased multiplier for faster scrolling
-      const scrollAmount = e.deltaY * 6;
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestCard = card;
+      }
+    });
+    
+    if (closestCard) {
+      const rect = closestCard.getBoundingClientRect();
+      const cardLeftRelative = rect.left;
+      const cardCenter = cardLeftRelative + (rect.width / 2);
+      const viewportCenter = containerWidth / 2;
+      const adjustment = cardCenter - viewportCenter;
       
-      // Add smooth scrolling behavior
-      sliderRef.current.scrollTo({
-        left: sliderRef.current.scrollLeft + scrollAmount,
+      // Apply the adjustment to center the card
+      container.scrollBy({
+        left: adjustment,
         behavior: 'smooth'
       });
     }
   };
 
-  // Add horizontal scroll with keyboard arrow keys
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (sliderRef.current && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-        e.preventDefault();
-        const scrollAmount = e.key === 'ArrowRight' ? 300 : -300;
+  // Modified wheel handler
+  const handleWheel = (e) => {
+    if (sliderRef.current) {
+      if (isMobile) {
+        // Let native scrolling happen, then center card after scrolling ends
+        const scrollAmount = e.deltaY * 3;
+        sliderRef.current.scrollLeft += scrollAmount;
+      } else {
+        // For desktop, use smooth scrolling
+        const scrollAmount = e.deltaY * 6;
         sliderRef.current.scrollTo({
           left: sliderRef.current.scrollLeft + scrollAmount,
           behavior: 'smooth'
         });
+      }
+    }
+  };
+
+  // Add keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (sliderRef.current && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        
+        // Get all cards
+        const cards = Array.from(sliderRef.current.querySelectorAll('.product-card'));
+        if (!cards.length) return;
+        
+        if (isMobile) {
+          // On mobile, navigate to next/previous card
+          const container = sliderRef.current;
+          const containerWidth = container.clientWidth;
+          const containerCenter = containerWidth / 2;
+          
+          // Find current centered card
+          let currentCardIndex = 0;
+          let smallestDistance = Infinity;
+          
+          cards.forEach((card, index) => {
+            const rect = card.getBoundingClientRect();
+            const cardCenter = rect.left + (rect.width / 2);
+            const distanceToCenter = Math.abs(cardCenter - containerCenter);
+            
+            if (distanceToCenter < smallestDistance) {
+              smallestDistance = distanceToCenter;
+              currentCardIndex = index;
+            }
+          });
+          
+          // Calculate next card index
+          const nextCardIndex = e.key === 'ArrowRight' 
+            ? Math.min(currentCardIndex + 1, cards.length - 1)
+            : Math.max(currentCardIndex - 1, 0);
+          
+          // Scroll to that card
+          cards[nextCardIndex].scrollIntoView({
+            behavior: 'smooth',
+            inline: 'center'
+          });
+        } else {
+          // On desktop, scroll by fixed amount
+          const scrollAmount = e.key === 'ArrowRight' ? 300 : -300;
+          sliderRef.current.scrollTo({
+            left: sliderRef.current.scrollLeft + scrollAmount,
+            behavior: 'smooth'
+          });
+        }
       }
     };
 
@@ -108,65 +221,96 @@ export default function Shop() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [isMobile]);
 
-  // Add touch scroll optimization
+  // Touch event handling with perfect centering
   useEffect(() => {
     let startX;
     let scrollLeft;
+    let isScrolling = false;
+    let scrollTimeout;
     
     const handleTouchStart = (e) => {
       if (!sliderRef.current) return;
-      startX = e.touches[0].pageX - sliderRef.current.offsetLeft;
+      isScrolling = true;
+      startX = e.touches[0].pageX;
       scrollLeft = sliderRef.current.scrollLeft;
+      
+      // Clear any pending scroll end timeout
+      clearTimeout(scrollTimeout);
     };
     
     const handleTouchMove = (e) => {
       if (!sliderRef.current || !startX) return;
-      const x = e.touches[0].pageX - sliderRef.current.offsetLeft;
-      const walk = (x - startX) * 2; // Scroll faster on touch
-      sliderRef.current.scrollLeft = scrollLeft - walk;
+      const x = e.touches[0].pageX;
+      const walk = (startX - x) * 1.5; 
+      sliderRef.current.scrollLeft = scrollLeft + walk;
+    };
+    
+    const handleTouchEnd = () => {
+      if (isMobile && isScrolling) {
+        isScrolling = false;
+        
+        // Use a timeout to allow the browser's inertial scrolling to finish
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          centerNearestCard();
+        }, 200);
+      }
+    };
+    
+    // Add scroll end detection for all scrolling
+    const handleScrollEnd = () => {
+      if (!isMobile) return;
+      
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        if (!isScrolling) {
+          centerNearestCard();
+        }
+      }, 150);
     };
     
     const slider = sliderRef.current;
     if (slider) {
       slider.addEventListener('touchstart', handleTouchStart, { passive: true });
       slider.addEventListener('touchmove', handleTouchMove, { passive: true });
+      slider.addEventListener('touchend', handleTouchEnd, { passive: true });
+      slider.addEventListener('scroll', handleScrollEnd, { passive: true });
       
       return () => {
         slider.removeEventListener('touchstart', handleTouchStart);
         slider.removeEventListener('touchmove', handleTouchMove);
+        slider.removeEventListener('touchend', handleTouchEnd);
+        slider.removeEventListener('scroll', handleScrollEnd);
+        clearTimeout(scrollTimeout);
       };
     }
-  }, []);
+  }, [isMobile]);
+
+  // Center cards after initial render and any time products change
+  useEffect(() => {
+    if (isMobile && filteredProducts.length > 0 && !loading) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        centerNearestCard();
+      }, 300);
+    }
+  }, [isMobile, filteredProducts, loading]);
 
   useEffect(() => {
-    if (products.length > 0) {
-      try {
-        let newFilteredProducts = [...products];
-        
-        if (filters.category && filters.category !== 'All') {
-          newFilteredProducts = newFilteredProducts.filter(
-            product => product.category === filters.category
-          );
-        }
-        
-        if (filters.search) {
-          const searchLower = filters.search.toLowerCase();
-          newFilteredProducts = newFilteredProducts.filter(
-            product => 
-              product.productName.toLowerCase().includes(searchLower) || 
-              (product.description && product.description.toLowerCase().includes(searchLower))
-          );
-        }
-
-        setFilteredProducts(newFilteredProducts);
-      } catch (err) {
-        console.error('Failed to filter products:', err);
-        setError(err.message);
-      }
+    const queryParams = {};
+    
+    if (filters.category && filters.category !== 'All') {
+      queryParams.category = filters.category;
     }
-  }, [filters, products]); 
+    
+    if (filters.search) {
+      queryParams.search = filters.search;
+    }
+    
+    fetchProducts(queryParams);
+  }, [filters]); 
 
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value }));
@@ -181,7 +325,31 @@ export default function Shop() {
     }
   };
 
+  // Modified openSidebar function to handle cart type
   const openSidebar = (productId, type) => {
+    // If cart type is requested from navbar, we don't need a specific product
+    if (type === 'cart') {
+      // You might want to set a dummy/sample product here or handle it differently in the Sidebar
+      // For now, we're using the first product in the list as a sample
+      const sampleProduct = products.length > 0 ? products[0] : null;
+      if (sampleProduct) {
+        const formattedProduct = {
+          ...sampleProduct,
+          name: sampleProduct.productName,
+          price: sampleProduct.priceVariants && sampleProduct.priceVariants.length > 0 
+            ? `Rs.${sampleProduct.priceVariants[0].price}` 
+            : 'Price not available',
+          image: "./assets/testimg.png"
+        };
+        
+        setSelectedProduct(formattedProduct);
+        setSidebarType(type);
+        setSidebarOpen(true);
+      }
+      return;
+    }
+    
+    // Original product details behavior
     const productDetails = products.find(p => p._id === productId);
     
     if (productDetails) {
@@ -219,6 +387,14 @@ export default function Shop() {
     msOverflowStyle: 'none',
   };
   
+  // Calculate card width based on viewport
+  const getCardWidth = () => {
+    if (isMobile) {
+      return `calc(100vw - 60px)`;
+    }
+    return viewportWidth < 640 ? '160px' : '260px';
+  };
+  
   const webkitScrollbarStyle = `
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -227,6 +403,29 @@ export default function Shop() {
     .no-scrollbar {
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
+    }
+    
+    @media (max-width: 767px) {
+      .snap-scroll-container {
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        scroll-padding: 20px;
+      }
+      
+      .snap-scroll-item {
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+      }
+      
+      .product-container {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+      
+      .mobile-card {
+        width: calc(100vw - 60px) !important;
+        margin-right: 20px !important;
+      }
     }
     
     .product-card {
@@ -295,37 +494,6 @@ export default function Shop() {
     .category-btn-active {
       animation: pulse 2s infinite;
     }
-    
-    /* Add scroll indicator arrows */
-    .scroll-indicator {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(0, 0, 0, 0.3);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 10;
-      transition: all 0.3s ease;
-    }
-    
-    .scroll-indicator:hover {
-      background: rgba(0, 0, 0, 0.6);
-    }
-    
-    .scroll-left {
-      left: 10px;
-    }
-    
-    .scroll-right {
-      right: 10px;
-    }
   `;
 
   return (
@@ -340,7 +508,8 @@ export default function Shop() {
       
       <div className='flex items-center justify-center w-full h-full transition-all duration-300'>
         <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
-          <Navbar />
+          {/* Pass openSidebar to Navbar */}
+          <Navbar openSidebar={openSidebar} />
           
           <div className="px-2 sm:px-4 md:px-6 py-1 md:py-3">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2 mb-1 sm:mb-2 md:mb-4">
@@ -365,7 +534,7 @@ export default function Shop() {
                 <input
                   type="text"
                   placeholder="Search products..."
-                  className="w-full px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm rounded-full bg-white/20 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300"
+                  className="w-full px-2 sm:px-4 py-1 sm:py-2 text-base sm:text-sm sm:rounded-lg lg:rounded-full rounded-lg md:rounded-full bg-white/20 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300"
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
@@ -373,7 +542,7 @@ export default function Shop() {
             </div>
           </div>
           
-          <div className="w-full flex-1 overflow-hidden px-2 sm:px-4 md:px-6 pt-0">
+          <div className="w-full flex-1 overflow-hidden pt-0">
             <style>{webkitScrollbarStyle}</style>
             <div className="h-full flex flex-col">
               {loading && (
@@ -400,30 +569,32 @@ export default function Shop() {
                     <div className="relative w-full flex-1">
                       <div 
                         ref={sliderRef}
-                        className="flex-1 overflow-x-auto no-scrollbar flex items-center"
+                        className={`flex-1 overflow-x-auto no-scrollbar flex items-center ${isMobile ? 'snap-scroll-container' : ''}`}
                         style={noScrollbarStyle}
                         onWheel={handleWheel} 
-                        // Fixed: Set passive to true (this adds it to the DOM property)
                         data-passive-events="true"
                       >
-                        <div className="flex space-x-2 sm:space-x-4 md:space-x-6 pb-2 sm:pb-4 items-center">
+                        <div className={`flex items-center ${isMobile ? 'product-container' : 'space-x-4 sm:space-x-5 md:space-x-6 px-4 sm:px-5 md:px-6'} pb-2 sm:pb-4`}>
                           {filteredProducts.map((product, index) => (
                             <div
-                            key={product._id}
-                            className={`product-card 
-                                        bg-white/10 
-                                        rounded-lg 
-                                        p-2 sm:p-3 md:p-4 
-                                        border border-white/20 
-                                        flex-shrink-0 
-                                        w-[90vw] sm:w-[180px] md:w-72 
-                                        h-[400px] md:h-[380px] 
-                                        fade-in`}
-                            style={{ animationDelay: `${index * 0.1}s` }}
-                            onMouseEnter={() => setHoveredCardId(product._id)}
-                            onMouseLeave={() => setHoveredCardId(null)}
-                          >
-                          
+                              key={product._id}
+                              className={`product-card 
+                                       ${isMobile ? 'snap-scroll-item mobile-card' : ''} 
+                                       bg-white/10 
+                                       rounded-lg 
+                                       p-2 sm:p-3 md:p-4 
+                                       border border-white/20 
+                                       flex-shrink-0 
+                                       h-[400px] md:h-[380px] 
+                                       fade-in`}
+                              style={{ 
+                                animationDelay: `${index * 0.1}s`,
+                                width: isMobile ? 'calc(100vw - 60px)' : getCardWidth(),
+                                marginRight: isMobile ? '20px' : '16px'
+                              }}
+                              onMouseEnter={() => setHoveredCardId(product._id)}
+                              onMouseLeave={() => setHoveredCardId(null)}
+                            >
                               <div className="w-full h-56 md:h-44 overflow-hidden my-4 sm:my-2 md:my-3 rounded-lg transition-all duration-300">
                                 <img
                                   src="./assets/testimg.png" 
@@ -456,6 +627,8 @@ export default function Shop() {
                               </div>
                             </div>
                           ))}
+                          {/* Add an extra empty div at the end for better scrolling on mobile */}
+                          {isMobile && <div style={{ width: '20px', flexShrink: 0 }}></div>}
                         </div>
                       </div>
                     </div>

@@ -15,6 +15,7 @@ export const queryProducts = async (Model, query) => {
       'newest': { createdAt: -1 },
       'oldest': { createdAt: 1 }
     };
+    
     const sortBy = sortOptions[sort] || { createdAt: -1 };
   
     // Pagination
