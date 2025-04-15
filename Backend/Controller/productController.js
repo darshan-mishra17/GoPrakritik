@@ -1,5 +1,5 @@
 import { Product, SpiceProduct, AttarProduct } from '../Models/Product.js';
-import { queryProducts } from '../Middleware/productSearch.js'; // Make sure this path is correct
+import { queryProducts } from '../Middleware/productSearch.js';
 
 // Error handler utility
 const handleError = (res, error, statusCode = 500) => {
