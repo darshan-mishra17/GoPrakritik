@@ -7,6 +7,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
   const [expandedSection, setExpandedSection] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(0);
   
+
   useEffect(() => {
     if (product && product.priceVariants && product.priceVariants.length > 0) {
       const priceString = product.priceVariants[selectedVariant].price.toString().replace(/[^\d]/g, '');
@@ -18,6 +19,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
     }
   }, [quantity, product, selectedVariant]);
 
+
   if (!isOpen) return null;
 
   const incrementQuantity = () => setQuantity(prev => prev + 1);
@@ -26,11 +28,14 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
       setQuantity(prev => prev - 1);
     }
   };
+  
 
   const handleRemove = () => {
     setQuantity(1);
     onClose();
   };
+
+
 
   const toggleSection = (section) => {
     if (expandedSection === section) {

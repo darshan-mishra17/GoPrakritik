@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Lenis from '@studio-freight/lenis';
-import { ShoppingCart } from "lucide-react";
 
 export default function Shop() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
