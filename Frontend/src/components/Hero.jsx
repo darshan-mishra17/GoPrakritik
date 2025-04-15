@@ -2,9 +2,9 @@ import React from "react";
 
 export default function Hero() {
   return (
-    <div className="flex items-center md:mx-24 md:my-8 p-4">
+    <div className="flex items-center md:mx-24 md:my-8 p-5">
       <div className="max-w-2xl">
-        <h1 className="text-white text-5xl sm:text-3xl md:text-6xl lg:text-6xl font-bold mb-6 leading-[1.3]">
+        <h1 className="text-white text-4xl sm:text-3xl md:text-6xl lg:text-6xl font-bold mb-6 leading-[1.3]">
           Bringing Nature’s
           <br />
           Best to Your

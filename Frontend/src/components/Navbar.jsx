@@ -1,14 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, Info, ShoppingCart } from "lucide-react";
 
 export default function Navbar({ openSidebar }) {
+  const navigate = useNavigate();
 
   const handleCartClick = (e) => {
-    e.preventDefault(); // Prevent default link behavior
+    e.preventDefault();
+    
     if (typeof openSidebar === 'function') {
-      openSidebar(null, 'cart'); // Open sidebar with cart type, no specific product
+      openSidebar(null, 'cart');
     } else {
-      console.error("openSidebar is not a function or not provided as a prop");
+      navigate('/shop');
     }
   };
 
@@ -47,7 +49,7 @@ export default function Navbar({ openSidebar }) {
           </span>
         </Link>
 
-        <div 
+        <div
           className="text-white text-lg relative group cursor-pointer"
           onClick={handleCartClick}
         >
