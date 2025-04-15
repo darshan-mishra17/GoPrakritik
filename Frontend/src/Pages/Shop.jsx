@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Lenis from '@studio-freight/lenis';
+import { ShoppingCart } from "lucide-react";
 
 export default function Shop() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,14 +17,15 @@ export default function Shop() {
     search: ''
   });
   const [activeCategory, setActiveCategory] = useState('All');
-  
   const [_hoveredCardId, setHoveredCardId] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(0);
 
   const sliderRef = useRef(null);
   const lenisRef = useRef(null);
-
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
   const [categories, setCategories] = useState(['All']);
 
   const fetchProducts = async (queryParams = {}) => {
@@ -35,7 +37,7 @@ export default function Shop() {
         .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
         .join('&');
       
-      const url = `http://localhost:8075/api/products${queryString ? `?=${queryString}` : ''}`;
+      const url = `http://localhost:8075/api/products${queryString ? `?${queryString}` : ''}`;
       const response = await fetch(url);
       const result = await response.json();
       
@@ -62,7 +64,6 @@ export default function Shop() {
     fetchProducts();
   }, []);
 
-  // Check if device is mobile and get viewport width
   useEffect(() => {
     const checkIfMobile = () => {
       const width = window.innerWidth;
@@ -79,7 +80,6 @@ export default function Shop() {
   }, []);
 
   useEffect(() => {
-    // Initialize Lenis smooth scrolling only for non-mobile devices
     if (!isMobile) {
       lenisRef.current = new Lenis({
         duration: 0.8,
@@ -105,198 +105,69 @@ export default function Shop() {
     }
   }, [isMobile]);
 
-  // Improved function to perfectly center the nearest card
-  const centerNearestCard = () => {
-    if (!sliderRef.current || !isMobile) return;
-    
-    const container = sliderRef.current;
-    const containerWidth = container.clientWidth;
-    
-    const cards = Array.from(container.querySelectorAll('.product-card'));
-    if (!cards.length) return;
-    
-    // Find the card that should be centered
-    let closestCard = null;
-    let closestDistance = Infinity;
-    
-    cards.forEach(card => {
-      const rect = card.getBoundingClientRect();
-      const cardLeftRelative = rect.left;
-      const cardCenter = cardLeftRelative + (rect.width / 2);
-      const viewportCenter = containerWidth / 2;
-      const distance = Math.abs(cardCenter - viewportCenter);
-      
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestCard = card;
-      }
-    });
-    
-    if (closestCard) {
-      const rect = closestCard.getBoundingClientRect();
-      const cardLeftRelative = rect.left;
-      const cardCenter = cardLeftRelative + (rect.width / 2);
-      const viewportCenter = containerWidth / 2;
-      const adjustment = cardCenter - viewportCenter;
-      
-      // Apply the adjustment to center the card
-      container.scrollBy({
-        left: adjustment,
-        behavior: 'smooth'
-      });
-    }
+  const handleTouchStart = (e) => {
+    if (!sliderRef.current) return;
+    isDraggingRef.current = true;
+    startXRef.current = e.touches[0].pageX;
+    scrollLeftRef.current = sliderRef.current.scrollLeft;
   };
 
-  // Modified wheel handler
+  const handleTouchMove = (e) => {
+    if (!isDraggingRef.current || !sliderRef.current) return;
+    e.preventDefault();
+    const x = e.touches[0].pageX;
+    const walk = (x - startXRef.current) * 1.5;
+    sliderRef.current.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const handleTouchEnd = () => {
+    isDraggingRef.current = false;
+  };
+
   const handleWheel = (e) => {
-    if (sliderRef.current) {
-      if (isMobile) {
-        // Let native scrolling happen, then center card after scrolling ends
-        const scrollAmount = e.deltaY * 3;
-        sliderRef.current.scrollLeft += scrollAmount;
-      } else {
-        // For desktop, use smooth scrolling
-        const scrollAmount = e.deltaY * 6;
-        sliderRef.current.scrollTo({
-          left: sliderRef.current.scrollLeft + scrollAmount,
-          behavior: 'smooth'
-        });
-      }
-    }
+    if (!sliderRef.current) return;
+    e.preventDefault();
+    
+    if (isMobile) return;
+    
+    sliderRef.current.scrollBy({
+      left: e.deltaY * 0.5,
+      behavior: 'smooth'
+    });
   };
 
-  // Add keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (sliderRef.current && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-        e.preventDefault();
-        
-        // Get all cards
-        const cards = Array.from(sliderRef.current.querySelectorAll('.product-card'));
-        if (!cards.length) return;
-        
-        if (isMobile) {
-          // On mobile, navigate to next/previous card
-          const container = sliderRef.current;
-          const containerWidth = container.clientWidth;
-          const containerCenter = containerWidth / 2;
-          
-          // Find current centered card
-          let currentCardIndex = 0;
-          let smallestDistance = Infinity;
-          
-          cards.forEach((card, index) => {
-            const rect = card.getBoundingClientRect();
-            const cardCenter = rect.left + (rect.width / 2);
-            const distanceToCenter = Math.abs(cardCenter - containerCenter);
-            
-            if (distanceToCenter < smallestDistance) {
-              smallestDistance = distanceToCenter;
-              currentCardIndex = index;
-            }
-          });
-          
-          // Calculate next card index
-          const nextCardIndex = e.key === 'ArrowRight' 
-            ? Math.min(currentCardIndex + 1, cards.length - 1)
-            : Math.max(currentCardIndex - 1, 0);
-          
-          // Scroll to that card
-          cards[nextCardIndex].scrollIntoView({
-            behavior: 'smooth',
-            inline: 'center'
-          });
-        } else {
-          // On desktop, scroll by fixed amount
-          const scrollAmount = e.key === 'ArrowRight' ? 300 : -300;
-          sliderRef.current.scrollTo({
-            left: sliderRef.current.scrollLeft + scrollAmount,
-            behavior: 'smooth'
-          });
-        }
-      }
+      if (!sliderRef.current || !(e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
+      e.preventDefault();
+      
+      const scrollAmount = e.key === 'ArrowRight' ? 300 : -300;
+      sliderRef.current.scrollBy({
+        left: scrollAmount,
+        behavior: 'smooth'
+      });
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isMobile]);
+  }, []);
 
-  // Touch event handling with perfect centering
   useEffect(() => {
-    let startX;
-    let scrollLeft;
-    let isScrolling = false;
-    let scrollTimeout;
-    
-    const handleTouchStart = (e) => {
-      if (!sliderRef.current) return;
-      isScrolling = true;
-      startX = e.touches[0].pageX;
-      scrollLeft = sliderRef.current.scrollLeft;
-      
-      // Clear any pending scroll end timeout
-      clearTimeout(scrollTimeout);
-    };
-    
-    const handleTouchMove = (e) => {
-      if (!sliderRef.current || !startX) return;
-      const x = e.touches[0].pageX;
-      const walk = (startX - x) * 1.5; 
-      sliderRef.current.scrollLeft = scrollLeft + walk;
-    };
-    
-    const handleTouchEnd = () => {
-      if (isMobile && isScrolling) {
-        isScrolling = false;
-        
-        // Use a timeout to allow the browser's inertial scrolling to finish
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          centerNearestCard();
-        }, 200);
-      }
-    };
-    
-    // Add scroll end detection for all scrolling
-    const handleScrollEnd = () => {
-      if (!isMobile) return;
-      
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        if (!isScrolling) {
-          centerNearestCard();
-        }
-      }, 150);
-    };
-    
     const slider = sliderRef.current;
-    if (slider) {
-      slider.addEventListener('touchstart', handleTouchStart, { passive: true });
-      slider.addEventListener('touchmove', handleTouchMove, { passive: true });
-      slider.addEventListener('touchend', handleTouchEnd, { passive: true });
-      slider.addEventListener('scroll', handleScrollEnd, { passive: true });
-      
-      return () => {
-        slider.removeEventListener('touchstart', handleTouchStart);
-        slider.removeEventListener('touchmove', handleTouchMove);
-        slider.removeEventListener('touchend', handleTouchEnd);
-        slider.removeEventListener('scroll', handleScrollEnd);
-        clearTimeout(scrollTimeout);
-      };
-    }
-  }, [isMobile]);
+    if (!slider) return;
 
-  // Center cards after initial render and any time products change
-  useEffect(() => {
-    if (isMobile && filteredProducts.length > 0 && !loading) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        centerNearestCard();
-      }, 300);
-    }
-  }, [isMobile, filteredProducts, loading]);
+    slider.addEventListener('touchstart', handleTouchStart, { passive: false });
+    slider.addEventListener('touchmove', handleTouchMove, { passive: false });
+    slider.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      slider.removeEventListener('touchstart', handleTouchStart);
+      slider.removeEventListener('touchmove', handleTouchMove);
+      slider.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
 
   useEffect(() => {
     const queryParams = {};
@@ -325,31 +196,14 @@ export default function Shop() {
     }
   };
 
-  // Modified openSidebar function to handle cart type
   const openSidebar = (productId, type) => {
-    // If cart type is requested from navbar, we don't need a specific product
     if (type === 'cart') {
-      // You might want to set a dummy/sample product here or handle it differently in the Sidebar
-      // For now, we're using the first product in the list as a sample
-      const sampleProduct = products.length > 0 ? products[0] : null;
-      if (sampleProduct) {
-        const formattedProduct = {
-          ...sampleProduct,
-          name: sampleProduct.productName,
-          price: sampleProduct.priceVariants && sampleProduct.priceVariants.length > 0 
-            ? `Rs.${sampleProduct.priceVariants[0].price}` 
-            : 'Price not available',
-          image: "./assets/testimg.png"
-        };
-        
-        setSelectedProduct(formattedProduct);
-        setSidebarType(type);
-        setSidebarOpen(true);
-      }
+      setSelectedProduct(null);
+      setSidebarType(type);
+      setSidebarOpen(true);
       return;
     }
     
-    // Original product details behavior
     const productDetails = products.find(p => p._id === productId);
     
     if (productDetails) {
@@ -387,7 +241,6 @@ export default function Shop() {
     msOverflowStyle: 'none',
   };
   
-  // Calculate card width based on viewport
   const getCardWidth = () => {
     if (isMobile) {
       return `calc(100vw - 60px)`;
@@ -403,29 +256,6 @@ export default function Shop() {
     .no-scrollbar {
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
-    }
-    
-    @media (max-width: 767px) {
-      .snap-scroll-container {
-        scroll-snap-type: x mandatory;
-        scroll-behavior: smooth;
-        scroll-padding: 20px;
-      }
-      
-      .snap-scroll-item {
-        scroll-snap-align: center;
-        scroll-snap-stop: always;
-      }
-      
-      .product-container {
-        padding-left: 20px;
-        padding-right: 20px;
-      }
-      
-      .mobile-card {
-        width: calc(100vw - 60px) !important;
-        margin-right: 20px !important;
-      }
     }
     
     .product-card {
@@ -508,12 +338,10 @@ export default function Shop() {
       
       <div className='flex items-center justify-center w-full h-full transition-all duration-300'>
         <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
-          {/* Pass openSidebar to Navbar */}
           <Navbar openSidebar={openSidebar} />
           
           <div className="px-2 sm:px-4 md:px-6 py-1 md:py-3">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2 mb-1 sm:mb-2 md:mb-4">
-              {/* Categories buttons with horizontal scroll for mobile */}
               <div className="flex flex-wrap gap-1 sm:gap-2 w-full overflow-x-auto no-scrollbar pb-1" style={noScrollbarStyle}>
                 {categories.map((category) => (
                   <button
@@ -569,17 +397,15 @@ export default function Shop() {
                     <div className="relative w-full flex-1">
                       <div 
                         ref={sliderRef}
-                        className={`flex-1 overflow-x-auto no-scrollbar flex items-center ${isMobile ? 'snap-scroll-container' : ''}`}
+                        className={`flex-1 overflow-x-auto no-scrollbar flex items-center`}
                         style={noScrollbarStyle}
-                        onWheel={handleWheel} 
-                        data-passive-events="true"
+                        onWheel={handleWheel}
                       >
-                        <div className={`flex items-center ${isMobile ? 'product-container' : 'space-x-4 sm:space-x-5 md:space-x-6 px-4 sm:px-5 md:px-6'} pb-2 sm:pb-4`}>
+                        <div className={`flex items-center space-x-4 sm:space-x-5 md:space-x-6 px-4 sm:px-5 md:px-6 pb-2 sm:pb-4`}>
                           {filteredProducts.map((product, index) => (
                             <div
                               key={product._id}
                               className={`product-card 
-                                       ${isMobile ? 'snap-scroll-item mobile-card' : ''} 
                                        bg-white/10 
                                        rounded-lg 
                                        p-2 sm:p-3 md:p-4 
@@ -589,8 +415,7 @@ export default function Shop() {
                                        fade-in`}
                               style={{ 
                                 animationDelay: `${index * 0.1}s`,
-                                width: isMobile ? 'calc(100vw - 60px)' : getCardWidth(),
-                                marginRight: isMobile ? '20px' : '16px'
+                                width: getCardWidth(),
                               }}
                               onMouseEnter={() => setHoveredCardId(product._id)}
                               onMouseLeave={() => setHoveredCardId(null)}
@@ -627,8 +452,6 @@ export default function Shop() {
                               </div>
                             </div>
                           ))}
-                          {/* Add an extra empty div at the end for better scrolling on mobile */}
-                          {isMobile && <div style={{ width: '20px', flexShrink: 0 }}></div>}
                         </div>
                       </div>
                     </div>
