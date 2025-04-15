@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart } from "lucide-react";
+import { useCart } from '../components/CartContext'; // Import the cart context
 
 export default function Sidebar({ isOpen, onClose, product, sidebarType, animationClass }) {
   const [quantity, setQuantity] = useState(1);
-  const [subtotal, setSubtotal] = useState(0);
+  const [_subtotal, setSubtotal] = useState(0);
   const [expandedSection, setExpandedSection] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(0);
+  const [addedToCartMessage, setAddedToCartMessage] = useState('');
   
+  // Use the cart context
+  const { cartItems, addToCart, updateCartItemQuantity, removeFromCart, getCartTotal } = useCart();
 
   useEffect(() => {
     if (product && product.priceVariants && product.priceVariants.length > 0) {
@@ -19,6 +23,11 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
     }
   }, [quantity, product, selectedVariant]);
 
+  useEffect(() => {
+    // Reset quantity and added message when sidebar opens with a new product
+    setQuantity(1);
+    setAddedToCartMessage('');
+  }, [product]);
 
   if (!isOpen) return null;
 
@@ -29,13 +38,26 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
     }
   };
   
-
-  const handleRemove = () => {
-    setQuantity(1);
-    onClose();
+  const handleAddToCart = () => {
+    if (product) {
+      addToCart(product, quantity, selectedVariant);
+      setAddedToCartMessage('Added to cart!');
+      
+      // Clear the message after 3 seconds
+      setTimeout(() => {
+        setAddedToCartMessage('');
+      }, 3000);
+    }
   };
 
+  const handleRemove = (productId, variantIndex) => {
+    removeFromCart(productId, variantIndex);
+  };
 
+  const handleUpdateCartQuantity = (productId, variantIndex, newQuantity) => {
+    if (newQuantity < 1) return;
+    updateCartItemQuantity(productId, variantIndex, newQuantity);
+  };
 
   const toggleSection = (section) => {
     if (expandedSection === section) {
@@ -209,73 +231,69 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
       <h3 className="text-lg font-semibold mb-3">Cart</h3>
       
       <div className="flex-1 overflow-y-auto scrollbar-hide">
-        {product ? (
-          <div className="border-b border-gray-200 pb-3 mb-3">
-            <div className="flex items-center">
-              <div className="w-12 h-12 border border-blue-300 rounded overflow-hidden mr-3">
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex justify-between items-start mb-1">
-                  <div>
-                    <h4 className="text-sm font-medium">{product.name}</h4>
-                    {product.priceVariants && product.priceVariants.length > 0 && (
-                      <span className="text-xs text-gray-500">{getCurrentVariantUnit()}</span>
-                    )}
+        {cartItems.length > 0 ? (
+          <div>
+            {cartItems.map((item) => (
+              <div key={`${item.product._id}-${item.selectedVariantIndex}`} className="border-b border-gray-200 pb-3 mb-3">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 border border-blue-300 rounded overflow-hidden mr-3">
+                    <img 
+                      src={item.product.image} 
+                      alt={item.product.name} 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <span className="text-xs">{getCurrentVariantPrice()}</span>
-                </div>
-                
-                {product.priceVariants && product.priceVariants.length > 1 && (
-                  <div className="mb-2">
-                    <div className="flex flex-wrap gap-1">
-                      {product.priceVariants.map((variant, idx) => (
-                        <button
-                          key={idx}
-                          className={`px-2 py-0.5 text-xs rounded-full border ${
-                            selectedVariant === idx 
-                              ? 'bg-green-700 text-white border-green-700' 
-                              : 'bg-white border-gray-300 text-gray-700 hover:border-green-700'
-                          }`}
-                          onClick={() => setSelectedVariant(idx)}
+                  
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start mb-1">
+                      <div>
+                        <h4 className="text-sm font-medium">{item.product.name}</h4>
+                        {item.product.priceVariants && item.product.priceVariants.length > 0 && (
+                          <span className="text-xs text-gray-500">
+                            {item.product.priceVariants[item.selectedVariantIndex].unit}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs">
+                        Rs.{item.product.priceVariants[item.selectedVariantIndex].price}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center border rounded-full overflow-hidden">
+                        <button 
+                          onClick={() => handleUpdateCartQuantity(
+                            item.product._id, 
+                            item.selectedVariantIndex, 
+                            item.quantity - 1
+                          )}
+                          className="px-1 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs"
                         >
-                          {variant.unit}
+                          -
                         </button>
-                      ))}
+                        <span className="px-2 py-0.5 text-xs">{item.quantity}</span>
+                        <button 
+                          onClick={() => handleUpdateCartQuantity(
+                            item.product._id, 
+                            item.selectedVariantIndex, 
+                            item.quantity + 1
+                          )}
+                          className="px-1 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <button 
+                        onClick={() => handleRemove(item.product._id, item.selectedVariantIndex)}
+                        className="text-gray-400 hover:text-gray-600 text-xs"
+                      >
+                        remove
+                      </button>
                     </div>
                   </div>
-                )}
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center border rounded-full overflow-hidden">
-                    <button 
-                      onClick={decrementQuantity}
-                      className="px-1 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs"
-                    >
-                      -
-                    </button>
-                    <span className="px-2 py-0.5 text-xs">{quantity}</span>
-                    <button 
-                      onClick={incrementQuantity}
-                      className="px-1 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button 
-                    onClick={handleRemove}
-                    className="text-gray-400 hover:text-gray-600 text-xs"
-                  >
-                    remove
-                  </button>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full">
@@ -313,9 +331,18 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
           {sidebarType === 'details' ? renderProductDetails() : renderCart()}
           
           <div className="mt-2 sticky bottom-0 bg-white pt-2 pb-1">
+            {addedToCartMessage && (
+              <div className="mb-2 p-2 bg-green-100 text-green-700 text-center text-sm rounded-lg">
+                {addedToCartMessage}
+              </div>
+            )}
+            
             {sidebarType === 'details' ? (
               <div>
-                <button className="w-full py-2 mb-2 bg-white border border-gray-300 rounded-full hover:bg-gray-50 text-center text-xs">
+                <button 
+                  className="w-full py-2 mb-2 bg-white border border-gray-300 rounded-full hover:bg-gray-50 text-center text-xs"
+                  onClick={handleAddToCart}
+                >
                   Add to Cart
                 </button>
                 <button className="w-full py-2 bg-green-700 text-white rounded-full hover:bg-green-600 text-center text-xs">
@@ -324,19 +351,19 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
               </div>
             ) : (
               <div>
-                {product && (
+                {cartItems.length > 0 && (
                   <div className="flex justify-between items-center mb-2 text-sm font-medium">
                     <span>SUBTOTAL</span>
-                    <span>Rs.{subtotal}</span>
+                    <span>Rs.{getCartTotal()}</span>
                   </div>
                 )}
                 <button 
                   className={`w-full py-2 bg-green-700 text-white rounded-full hover:bg-green-600 text-center text-xs ${
-                    !product ? 'opacity-50 cursor-not-allowed' : ''
+                    cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
-                  disabled={!product}
+                  disabled={cartItems.length === 0}
                 >
-                  {product ? 'Checkout' : 'Cart is Empty'}
+                  {cartItems.length > 0 ? 'Checkout' : 'Cart is Empty'}
                 </button>
               </div>
             )}

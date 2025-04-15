@@ -10,7 +10,6 @@ Since its inception, Go Prakritik has been committed to offering high-quality, e
 Go Prakritik is not just a business; it is a movement towards sustainable living and better health. The vision is to create a world where people have access to pure, unadulterated products that enhance their well-being and contribute to a healthier planet. Join us in our journey to make natural, organic living a standard for everyone.`;
 
   const [activeIcon, setActiveIcon] = useState(null);
-  //added some emoji and related text
   const icons = [
     { emoji: "🌿", label: "Organic" },
     { emoji: "💚", label: "Healthy" },
@@ -28,7 +27,7 @@ Go Prakritik is not just a business; it is a movement towards sustainable living
       } else {
         clearInterval(interval);
       }
-    }, 20); // Adjust typing speed here
+    }, 20);
 
     return () => clearInterval(interval);
   }, [fullText]);
@@ -61,7 +60,11 @@ Go Prakritik is not just a business; it is a movement towards sustainable living
                 {icons.map((icon, index) => (
                   <div 
                     key={index}
-                    className={`p-4 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${activeIcon === index ? 'bg-green-600 scale-110' : 'bg-green-700/80 hover:bg-green-600/90 hover:scale-105'}`}
+                    className={`p-4 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 
+                      ${activeIcon === index ? 
+                        'bg-green-600/30 backdrop-blur-md border border-green-300/30 shadow-lg scale-105' : 
+                        'bg-green-700/20 backdrop-blur-sm border border-green-300/20 hover:bg-green-600/30 hover:border-green-300/40 hover:shadow-md hover:scale-105'}
+                      glass-card`}
                     onClick={() => setActiveIcon(index === activeIcon ? null : index)}
                     onMouseEnter={() => setActiveIcon(index)}
                     onMouseLeave={() => setActiveIcon(null)}
@@ -72,9 +75,11 @@ Go Prakritik is not just a business; it is a movement towards sustainable living
                 ))}
               </div>
               
-              <div className="bg-green-600/80 p-6 rounded-xl w-full max-w-md transition-all duration-500 hover:shadow-lg">
+              <div className={`glass-card p-6 rounded-xl w-full max-w-md transition-all duration-500 
+                ${activeIcon !== null ? 'bg-green-600/30 border border-green-300/30' : 'bg-green-600/20 border border-green-300/20'} 
+                backdrop-blur-md shadow-lg hover:shadow-xl`}>
                 <h3 className="text-xl font-semibold text-white mb-3">Our Mission</h3>
-                <p className="text-white">
+                <p className="text-white/90">
                   {activeIcon !== null ? (
                     <span className="animate-fadeIn">
                       {icons[activeIcon].label}: We're committed to {icons[activeIcon].label.toLowerCase()} products that benefit both people and the planet.
@@ -99,9 +104,6 @@ Go Prakritik is not just a business; it is a movement towards sustainable living
         .animate-blink {
           animation: blink 1s infinite;
         }
-        .animate-bounce-slow {
-          animation: bounce 2s infinite;
-        }
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
@@ -109,10 +111,6 @@ Go Prakritik is not just a business; it is a movement towards sustainable living
         @keyframes blink {
           0%, 100% { opacity: 1; }
           50% { opacity: 0; }
-        }
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
         }
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
@@ -124,6 +122,15 @@ Go Prakritik is not just a business; it is a movement towards sustainable living
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: rgba(255,255,255,0.3);
           border-radius: 10px;
+        }
+        .glass-card {
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
         }
       `}</style>
     </div>
