@@ -433,8 +433,8 @@ export default function Shop() {
                                 <span className="text-xl sm:text-xs md:text-base text-white">
                                   {getBasePrice(product)}
                                 </span>
-                              </div>
-                              
+                              </div>    
+                          
                               <div className="space-y-1 sm:space-y-2 mt-auto">
                                 <button 
                                   className="btn-hover-effect w-full py-0.5 sm:py-1 md:py-1.5 text-xl sm:text-xs bg-transparent text-white border border-white rounded-full font-medium transition-all duration-300 hover:bg-white hover:text-green-700"
