@@ -11,7 +11,6 @@ const orderItemSchema = new Schema({
   productType: { type: String },                    // Product / SpiceProduct / AttarProduct
 }, { _id: false });
 
-// Delivery Address (embedded to keep a snapshot of the delivery info)
 const deliveryAddressSchema = new Schema({
   fullName: { type: String, required: true },
   phone: { type: String, required: true },
