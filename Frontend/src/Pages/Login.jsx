@@ -35,30 +35,24 @@ export default function Login() {
     setSuccess(null);
     setLoading(true);
 
-    // Form validation
     if (!isSignIn && formData.password !== formData.confirmPassword) {
       setError("Passwords don't match");
       setLoading(false);
       return;
     }
 
-    // Simulate API call
     setTimeout(() => {
       setLoading(false);
       if (isSignIn) {
         setSuccess("Successfully signed in!");
-        // Here you would typically redirect or set auth state
       } else {
         setSuccess("Account created successfully!");
-        // Here you would typically redirect or set auth state
       }
     }, 1500);
   };
 
   const handleGoogleLogin = () => {
-    // Add your Google login logic here
     console.log("Logging in with Google");
-    // Typically this would redirect to Google OAuth or open a popup
   };
 
   return (
@@ -75,31 +69,31 @@ export default function Login() {
         <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
           <Navbar />
           
-          <div className="flex-1 flex items-center justify-center p-1 md:p-2 overflow-hidden">
-            <div className="w-full max-w-sm">
-              <div className= "bg-white/10 backdrop-blur-md rounded-xl p-3 shadow-lg border border-white/20">
-                <div className="flex justify-center mb-2">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-[25rem] animate-fadeIn">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-5 shadow-lg border border-white/20">
+                <div className="flex justify-center mb-5">
                   <h1 className="text-2xl font-bold text-white">
-                    {isSignIn ? 'Sign In' : 'Create Account'}
+                    {isSignIn ? 'Welcome back' : 'Create account'}
                   </h1>
                 </div>
                 
-                <div className="flex mb-2">
+                <div className="flex mb-5 rounded-full overflow-hidden bg-white/10 border border-white/20">
                   <button
-                    className={`flex-1 py-1 text-x text-center rounded-l-full transition-all duration-300 ${
+                    className={`flex-1 py-2 text-center transition-all duration-300 ${
                       isSignIn 
                         ? 'bg-white text-green-700 font-medium'
-                        : 'bg-transparent text-white border-y border-l border-white hover:bg-white/20'
+                        : 'bg-transparent text-white hover:bg-white/10'
                     }`}
                     onClick={() => setIsSignIn(true)}
                   >
                     Sign In
                   </button>
                   <button
-                    className={`flex-1 py-1 text-sm text-center rounded-r-full transition-all duration-300 ${
+                    className={`flex-1 py-2 text-center transition-all duration-300 ${
                       !isSignIn 
                         ? 'bg-white text-green-700 font-medium'
-                        : 'bg-transparent text-white border-y border-r border-white hover:bg-white/20'
+                        : 'bg-transparent text-white hover:bg-white/10'
                     }`}
                     onClick={() => setIsSignIn(false)}
                   >
@@ -107,105 +101,89 @@ export default function Login() {
                   </button>
                 </div>
                 
-                {error && (
-                  <div className="mb-1 p-1 bg-red-100/30 backdrop-blur-sm border border-red-300/30 rounded-lg text-white text-sm">
-                    {error}
+                {(error || success) && (
+                  <div className={`mb-4 p-2 rounded-lg text-sm backdrop-blur-sm border ${
+                    error ? 'bg-red-100/30 border-red-300/30' : 'bg-green-100/30 border-green-300/30'
+                  } text-white animate-bounceOnce`}>
+                    {error || success}
                   </div>
                 )}
                 
-                {success && (
-                  <div className="mb-1 p-1 bg-green-100/30 backdrop-blur-sm border border-green-300/30 rounded-lg text-white text-sm">
-                    {success}
-                  </div>
-                )}
-                
-                <form onSubmit={handleSubmit}>
-                  <div className="space-y-2">
-                    {!isSignIn && (
-                      <div>
-                        <label htmlFor="name" className="block text-white text-xs mb-0">Full Name</label>
-                        <input
-                          type="text"
-                          id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleInputChange}
-                          className="w-full px-2 py-1 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-1 focus:ring-white/50 transition-all duration-300 text-xs"
-                          placeholder="Enter your name"
-                          required={!isSignIn}
-                        />
-                      </div>
-                    )}
-                    
-                    <div>
-                      <label htmlFor="email" className="block text-white text-sm mb-0">Email</label>
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  {!isSignIn && (
+                    <div className="animate-fadeIn">
                       <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
+                        type="text"
+                        name="name"
+                        value={formData.name}
                         onChange={handleInputChange}
-                        className="w-full px-2 py-1 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-1 focus:ring-white/50 transition-all duration-300 text-sm"
-                        placeholder="Enter your email"
-                        required
+                        className="w-full px-4 py-2 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 text-sm"
+                        placeholder="Full name"
+                        required={!isSignIn}
                       />
                     </div>
-                    
-                    <div>
-                      <label htmlFor="password" className="block text-white text-sm mb-0">Password</label>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          id="password"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          className="w-full px-2 py-1 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-1 focus:ring-white/50 transition-all duration-300 text-sm"
-                          placeholder="Enter your password"
-                          required
-                        />
-                        <button
-                          type="button"
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white text-xs"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? "Hide" : "Show"}
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {!isSignIn && (
-                      <div>
-                        <label htmlFor="confirmPassword" className="block text-white text-sm mb-0">Confirm Password</label>
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
-                          onChange={handleInputChange}
-                          className="w-full px-2 py-1 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-1 focus:ring-white/50 transition-all duration-300 text-sm"
-                          placeholder="Confirm your password"
-                          required={!isSignIn}
-                        />
-                      </div>
-                    )}
+                  )}
+                  
+                  <div>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 text-sm"
+                      placeholder="Email address"
+                      required
+                    />
                   </div>
                   
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 text-sm"
+                      placeholder="Password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white text-xs"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  
+                  {!isSignIn && (
+                    <div className="animate-fadeIn">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 text-sm"
+                        placeholder="Confirm password"
+                        required={!isSignIn}
+                      />
+                    </div>
+                  )}
+                  
                   {isSignIn && (
-                    <div className="flex justify-end mt-1 mb-1">
-                      <Link to="/forgot-password" className="text-white/80 hover:text-white text-sm">
-                        Forgot Password?
+                    <div className="flex justify-end">
+                      <Link to="/forgot-password" className="text-white/80 hover:text-white text-xs">
+                        Forgot password?
                       </Link>
                     </div>
                   )}
                   
                   <button
                     type="submit"
-                    className="w-full py-1 mt-1 mb-1 bg-white text-green-700 rounded-full text-sm font-medium hover:bg-green-100 transition-all duration-300 flex justify-center items-center"
+                    className="w-full py-2 mt-2 bg-white text-green-700 rounded-full text-sm font-medium hover:bg-green-100 transition-all duration-300 flex justify-center items-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     disabled={loading}
                   >
                     {loading ? (
-                      <svg className="animate-spin h-3 w-3 text-green-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-4 w-4 text-green-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -215,10 +193,10 @@ export default function Login() {
                   </button>
                 </form>
                 
-                <div className="text-center my-1">
+                <div className="text-center mt-3">
                   <button
                     onClick={toggleForm}
-                    className="text-white/80 hover:text-white text-sm"
+                    className="text-white/80 hover:text-white text-xs"
                   >
                     {isSignIn 
                       ? "Don't have an account? Sign Up" 
@@ -226,18 +204,19 @@ export default function Login() {
                   </button>
                 </div>
                 
-                {/* Simplified social login section with only Google */}
-                <div className="mt-1 pt-1 border-t border-white/20">
-                  <p className="text-center text-white/70 text-sm mb-1">Or continue with</p>
+                <div className="mt-4 pt-3 border-t border-white/20">
                   <div className="flex justify-center">
                     <button 
                       onClick={handleGoogleLogin}
-                      className="flex items-center justify-center w-full py-1 px-4 rounded-full bg-white/20 border border-white/30 hover:bg-white/30 transition-all duration-300 text-sm text-white"
+                      className="flex items-center justify-center w-full py-2 px-4 rounded-full bg-white hover:bg-gray-100 transition-all duration-300 text-xs text-gray-700 font-medium shadow-sm border border-gray-300"
                     >
-                      <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12.545 10.239v3.821h5.445c-0.712 2.315-2.647 3.972-5.445 3.972-3.332 0-6.033-2.701-6.033-6.032s2.701-6.032 6.033-6.032c1.498 0 2.866 0.549 3.921 1.453l2.814-2.814c-1.784-1.664-4.177-2.664-6.735-2.664-5.522 0-10 4.477-10 10s4.478 10 10 10c8.396 0 10-7.524 10-10 0-0.67-0.069-1.325-0.189-1.961h-9.811z"/>
+                      <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                       </svg>
-                      Login with Google
+                      Sign in with Google
                     </button>
                   </div>
                 </div>
@@ -247,13 +226,20 @@ export default function Login() {
         </div>
       </div>
       
-      <style jsx>{`
+      <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes bounceOnce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
         .animate-fadeIn {
-          animation: fadeIn 0.5s ease-in-out;
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+        .animate-bounceOnce {
+          animation: bounceOnce 0.6s ease;
         }
       `}</style>
     </div>
