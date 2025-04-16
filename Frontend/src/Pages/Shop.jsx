@@ -156,15 +156,34 @@ export default function Shop() {
   };
 
   const handleWheel = (e) => {
-    if (!sliderRef.current) return;
+    if (!sliderRef.current || isMobile) return;
+    
     e.preventDefault();
     
-    if (isMobile) return;
+    // Adjust these values to control scroll speed and feel
+    const speedMultiplier = 8; // Increased from 0.5
+    const momentum = 1; // Creates a slight momentum effect
     
-    sliderRef.current.scrollBy({
-      left: e.deltaY * 0.5,
+    // Apply momentum to the scroll
+    const currentScroll = sliderRef.current.scrollLeft;
+    const targetScroll = currentScroll + (e.deltaY * speedMultiplier);
+    
+    sliderRef.current.scrollTo({
+      left: targetScroll,
       behavior: 'smooth'
     });
+    
+    // Small momentum effect
+    setTimeout(() => {
+      const newScroll = sliderRef.current.scrollLeft;
+      const diff = targetScroll - newScroll;
+      if (Math.abs(diff) > 5) {
+        sliderRef.current.scrollBy({
+          left: diff * momentum,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
   };
 
   useEffect(() => {
