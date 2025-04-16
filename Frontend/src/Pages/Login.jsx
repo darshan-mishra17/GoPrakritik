@@ -69,9 +69,9 @@ export default function Login() {
         <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
           <Navbar />
           
-          <div className="flex-1 flex items-center justify-center">
-            <div className="w-[25rem] animate-fadeIn">
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-5 shadow-lg border border-white/20">
+          <div className="flex-1 flex items-center justify-center ">
+            <div className="w-[20rem] md:w-[25rem] lg:w-[27rem] animate-fadeIn ">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-5 shadow-lg border border-white/20 ">
                 <div className="flex justify-center mb-5">
                   <h1 className="text-2xl font-bold text-white">
                     {isSignIn ? 'Welcome back' : 'Create account'}
