@@ -1,17 +1,27 @@
 import React from 'react';
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingBag, Info, ShoppingCart } from "lucide-react";
 import { useCart } from './CartContext';
 
 export default function Navbar({ openSidebar }) {
   const { getCartItemCount } = useCart();
   const cartItemCount = getCartItemCount();
+  const location = useLocation();
+  const navigate = useNavigate();
   
+  const isShopPage = location.pathname === '/shop';
+
   const handleCartClick = (e) => {
     e.preventDefault();
     
-    if (typeof openSidebar === 'function') {
-      openSidebar(null, 'cart');
+    if (isShopPage) {
+      // On shop page, open the cart sidebar
+      if (typeof openSidebar === 'function') {
+        openSidebar(null, 'cart');
+      }
+    } else {
+      // On other pages (home, about), navigate to shop page
+      navigate('/shop');
     }
   };
   

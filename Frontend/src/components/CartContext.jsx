@@ -31,7 +31,7 @@ export function CartProvider({ children }) {
     setCartItems(prevItems => {
       // Check if this product variant is already in the cart
       const existingItemIndex = prevItems.findIndex(item => 
-        item.product._id === product._id && 
+        item.product._id === product._id &&
         item.selectedVariantIndex === selectedVariantIndex
       );
       
@@ -49,8 +49,8 @@ export function CartProvider({ children }) {
   
   const updateCartItemQuantity = (productId, variantIndex, newQuantity) => {
     setCartItems(prevItems => 
-      prevItems.map(item => 
-        (item.product._id === productId && item.selectedVariantIndex === variantIndex)
+      prevItems.map(item =>
+        (item.product._id === productId && item.selectedVariantIndex === variantIndex) 
           ? { ...item, quantity: newQuantity }
           : item
       )
@@ -59,7 +59,7 @@ export function CartProvider({ children }) {
   
   const removeFromCart = (productId, variantIndex) => {
     setCartItems(prevItems => 
-      prevItems.filter(item => 
+      prevItems.filter(item =>
         !(item.product._id === productId && item.selectedVariantIndex === variantIndex)
       )
     );

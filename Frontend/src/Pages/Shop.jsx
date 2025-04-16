@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Lenis from '@studio-freight/lenis';
+import { useCart } from '../components/CartContext';
 
 export default function Shop() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,12 +21,16 @@ export default function Shop() {
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(0);
 
+  // Use the cart context
+  const { addToCart } = useCart();
+
   const sliderRef = useRef(null);
   const lenisRef = useRef(null);
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
   const scrollLeftRef = useRef(0);
   const [categories, setCategories] = useState(['All']);
+  const snapTimeoutRef = useRef(null);
 
   const fetchProducts = async (queryParams = {}) => {
     try {
@@ -109,6 +114,11 @@ export default function Shop() {
     isDraggingRef.current = true;
     startXRef.current = e.touches[0].pageX;
     scrollLeftRef.current = sliderRef.current.scrollLeft;
+    
+    // Clear any pending snap timeout
+    if (snapTimeoutRef.current) {
+      clearTimeout(snapTimeoutRef.current);
+    }
   };
 
   const handleTouchMove = (e) => {
@@ -121,6 +131,28 @@ export default function Shop() {
 
   const handleTouchEnd = () => {
     isDraggingRef.current = false;
+    
+    if (!isMobile || !sliderRef.current) return;
+    
+    // Snap to nearest card
+    snapTimeoutRef.current = setTimeout(() => {
+      const slider = sliderRef.current;
+      const cardWidth = getCardWidthNumber();
+      const scrollPosition = slider.scrollLeft;
+      const cardCount = Math.round(scrollPosition / cardWidth);
+      
+      slider.scrollTo({
+        left: cardCount * cardWidth,
+        behavior: 'smooth'
+      });
+    }, 100);
+  };
+
+  const getCardWidthNumber = () => {
+    if (isMobile) {
+      return viewportWidth - 60; // 60px for margins/padding
+    }
+    return viewportWidth < 640 ? 160 : 260;
   };
 
   const handleWheel = (e) => {
@@ -165,8 +197,11 @@ export default function Shop() {
       slider.removeEventListener('touchstart', handleTouchStart);
       slider.removeEventListener('touchmove', handleTouchMove);
       slider.removeEventListener('touchend', handleTouchEnd);
+      if (snapTimeoutRef.current) {
+        clearTimeout(snapTimeoutRef.current);
+      }
     };
-  }, []);
+  }, [isMobile, viewportWidth]);
 
   useEffect(() => {
     const queryParams = {};
@@ -218,6 +253,11 @@ export default function Shop() {
       setSelectedProduct(formattedProduct);
       setSidebarType(type);
       setSidebarOpen(true);
+      
+      if (type === 'buy') {
+        addToCart(formattedProduct, 1, 0);
+        setSidebarType('cart');
+      }
     }
   };
 
@@ -255,15 +295,17 @@ export default function Shop() {
     .no-scrollbar {
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
+      scroll-snap-type: ${isMobile ? 'x mandatory' : 'none'};
     }
     
     .product-card {
       touch-action: pan-y;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
+      scroll-snap-align: ${isMobile ? 'center' : 'none'};
     }
     
     .product-card:hover {
-      transform: translateY(-8px);
+      transform: ${isMobile ? 'none' : 'translateY(-8px)'};
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     }
     
