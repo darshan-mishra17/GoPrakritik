@@ -1,18 +1,33 @@
-import express from 'express';  // Remove the '.js' extension
-import connectDB from './db/connection.js';  // Add .js extension for local files
+import express from 'express';
+import connectDB from './db/connection.js';  
 import dotenv from 'dotenv';
+import cors from 'cors';
+import productRoutes from './Router/productRouter.js';
+import userRoutes from './Router/userRouter.js';
+import orderRoutes from './Router/orderRouter.js';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
+app.use(cors({
+  origin: ['http://localhost:5173'], // Replace with your Vite app's port
+  credentials: true // If you need to send cookies
+}));
+
+// Routes
+app.use('/api/products', productRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/order', orderRoutes);
+
+
 const PORT = process.env.PORT || 5001;
 
 // Connect to DB first, then start server
 connectDB().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {  // Fixed parameter order
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 }).catch(err => {
   console.error('Database connection failed', err);
