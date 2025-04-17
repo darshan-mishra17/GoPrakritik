@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
 export default function Login() {
+  const navigate = useNavigate();
   const [isSignIn, setIsSignIn] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
@@ -14,6 +15,14 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/profile'); // Redirect to profile if already logged in
+    }
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -27,32 +36,90 @@ export default function Login() {
     setIsSignIn(!isSignIn);
     setError(null);
     setSuccess(null);
+    // Reset form data when toggling
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
     setLoading(true);
 
-    if (!isSignIn && formData.password !== formData.confirmPassword) {
-      setError("Passwords don't match");
-      setLoading(false);
-      return;
-    }
-
-    setTimeout(() => {
-      setLoading(false);
-      if (isSignIn) {
-        setSuccess("Successfully signed in!");
-      } else {
-        setSuccess("Account created successfully!");
+    try {
+      // Validation
+      if (!isSignIn && formData.password !== formData.confirmPassword) {
+        setError("Passwords don't match");
+        setLoading(false);
+        return;
       }
-    }, 1500);
+
+      // API endpoints based on action
+      const endpoint = isSignIn 
+        ? 'http://localhost:8075/api/user/login' 
+        : 'http://localhost:8075/api/user/register';
+
+      // Prepare request data
+      const requestData = isSignIn 
+        ? { 
+            email: formData.email, 
+            password: formData.password 
+          } 
+        : { 
+            name: formData.name, 
+            email: formData.email, 
+            password: formData.password,
+            phone: '' // Send empty string for phone
+          };
+
+      console.log('Making request to:', endpoint);
+      console.log('With data:', JSON.stringify(requestData));
+
+      // Make API request
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      const data = await response.json();
+      console.log('Response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Authentication failed');
+      }
+
+      // Handle successful response
+      setSuccess(isSignIn ? "Successfully signed in!" : "Account created successfully!");
+      
+      // Store token in localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      
+      // Store user data
+      if (data.data) {
+        localStorage.setItem('user', JSON.stringify(data.data));
+      }
+    
+    } catch (err) {
+      console.error('Error during authentication:', err);
+      setError(err.message || 'Failed to connect to server. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
-    console.log("Logging in with Google");
+    // This would typically redirect to your Google OAuth endpoint
+    alert('Google login is not implemented yet');
   };
 
   return (
