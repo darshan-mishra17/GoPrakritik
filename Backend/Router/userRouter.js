@@ -1,31 +1,38 @@
 import express from 'express';
 import UserController from '../Controller/userController.js';
+import AuthController from '../Controller/AuthController.js';
+import authMiddleware from '../Middleware/authMiddleware.js';
+import adminMiddleware from '../Middleware/adminMiddleware.js';
 
 const router = express.Router();
 
+// Auth routes
+router.post('/register', AuthController.register);
+router.post('/login', AuthController.login);
+
 // Admin-only routes
 router.route('/')
-  .get(UserController.getAllUsers);
+  .get(authMiddleware, adminMiddleware, UserController.getAllUsers);
 
 // User CRUD routes
 router.route('/:id')
-  .get( UserController.getUserById)
-  .put(UserController.updateUser)
-  .delete(UserController.deleteUser);
+  .get(authMiddleware, UserController.getUserById)
+  .put(authMiddleware, UserController.updateUser)
+  .delete(authMiddleware, adminMiddleware, UserController.deleteUser);
 
 // Address management routes
 router.route('/:userId/addresses')
-  .post(UserController.addAddress);
+  .post(authMiddleware, UserController.addAddress);
 
 router.route('/:userId/addresses/:addressId')
-  .put(UserController.updateAddress)
-  .delete(UserController.deleteAddress);
+  .put(authMiddleware, UserController.updateAddress)
+  .delete(authMiddleware, UserController.deleteAddress);
 
 // Order history routes
 router.route('/:userId/orders')
-  .get(UserController.getOrderHistory);
+  .get(authMiddleware, UserController.getOrderHistory);
 
 router.route('/:userId/orders/:orderId')
-  .get(UserController.getSingleOrder);
+  .get(authMiddleware, UserController.getSingleOrder);
 
 export default router;

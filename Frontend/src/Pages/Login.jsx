@@ -9,7 +9,8 @@ export default function Login() {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    phone: '' // Added phone field
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ export default function Login() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      navigate('/profile'); // Redirect to profile if already logged in
+      navigate('/shop'); // Redirect to shop if already logged in
     }
   }, [navigate]);
 
@@ -41,7 +42,8 @@ export default function Login() {
       name: '',
       email: '',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      phone: ''
     });
   };
 
@@ -61,7 +63,7 @@ export default function Login() {
 
       // API endpoints based on action
       const endpoint = isSignIn 
-        ? 'http://localhost:8075/api/user/login' 
+        ? 'http://localhost:8075/api/user/login'
         : 'http://localhost:8075/api/user/register';
 
       // Prepare request data
@@ -74,11 +76,8 @@ export default function Login() {
             name: formData.name, 
             email: formData.email, 
             password: formData.password,
-            phone: '' // Send empty string for phone
+            phone: formData.phone 
           };
-
-      console.log('Making request to:', endpoint);
-      console.log('With data:', JSON.stringify(requestData));
 
       // Make API request
       const response = await fetch(endpoint, {
@@ -90,7 +89,6 @@ export default function Login() {
       });
 
       const data = await response.json();
-      console.log('Response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Authentication failed');
@@ -108,6 +106,11 @@ export default function Login() {
       if (data.data) {
         localStorage.setItem('user', JSON.stringify(data.data));
       }
+      
+      // Redirect to shop after a short delay
+      setTimeout(() => {
+        navigate('/shop');
+      }, 1500);
     
     } catch (err) {
       console.error('Error during authentication:', err);
@@ -202,6 +205,21 @@ export default function Login() {
                       required
                     />
                   </div>
+                  
+                  {/* Add phone input for registration */}
+                  {!isSignIn && (
+                    <div className="animate-fadeIn">
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 text-sm"
+                        placeholder="Phone number"
+                        required={!isSignIn}
+                      />
+                    </div>
+                  )}
                   
                   <div className="relative">
                     <input
