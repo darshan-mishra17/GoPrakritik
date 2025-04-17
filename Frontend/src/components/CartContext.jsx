@@ -7,20 +7,16 @@ export function useCart() {
 }
 
 export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState([]);
-  
-  // Load cart from localStorage on initial render
-  useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error("Failed to parse cart from localStorage:", error);
-        setCartItems([]);
-      }
+  // Initialize state from localStorage or empty array
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const savedCart = localStorage.getItem('cart');
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error("Failed to parse cart from localStorage:", error);
+      return [];
     }
-  }, []);
+  });
   
   // Save cart to localStorage whenever it changes
   useEffect(() => {
@@ -31,26 +27,34 @@ export function CartProvider({ children }) {
     setCartItems(prevItems => {
       // Check if this product variant is already in the cart
       const existingItemIndex = prevItems.findIndex(item => 
-        item.product._id === product._id &&
+        item.product._id === product._id && 
         item.selectedVariantIndex === selectedVariantIndex
       );
       
       if (existingItemIndex >= 0) {
         // Update quantity of existing item
         const updatedItems = [...prevItems];
-        updatedItems[existingItemIndex].quantity += quantity;
+        updatedItems[existingItemIndex] = {
+          ...updatedItems[existingItemIndex],
+          quantity: updatedItems[existingItemIndex].quantity + quantity
+        };
         return updatedItems;
       } else {
         // Add new item
         return [...prevItems, { product, quantity, selectedVariantIndex }];
       }
     });
+    
+    // For consistency with the original, return a Promise
+    return Promise.resolve(true);
   };
   
   const updateCartItemQuantity = (productId, variantIndex, newQuantity) => {
+    if (newQuantity < 1) return; // Prevent quantities less than 1
+    
     setCartItems(prevItems => 
-      prevItems.map(item =>
-        (item.product._id === productId && item.selectedVariantIndex === variantIndex) 
+      prevItems.map(item => 
+        (item.product._id === productId && item.selectedVariantIndex === variantIndex)
           ? { ...item, quantity: newQuantity }
           : item
       )
@@ -59,7 +63,7 @@ export function CartProvider({ children }) {
   
   const removeFromCart = (productId, variantIndex) => {
     setCartItems(prevItems => 
-      prevItems.filter(item =>
+      prevItems.filter(item => 
         !(item.product._id === productId && item.selectedVariantIndex === variantIndex)
       )
     );
@@ -67,8 +71,14 @@ export function CartProvider({ children }) {
   
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
+      // Make sure we have priceVariants and the selected index exists
+      if (!item.product.priceVariants || 
+          !item.product.priceVariants[item.selectedVariantIndex]) {
+        return total;
+      }
+      
       const priceVariant = item.product.priceVariants[item.selectedVariantIndex];
-      const priceString = priceVariant?.price.toString().replace(/[^\d]/g, '') || "0";
+      const priceString = priceVariant.price.toString().replace(/[^\d]/g, '') || "0";
       const price = parseInt(priceString, 10);
       return total + (price * item.quantity);
     }, 0);

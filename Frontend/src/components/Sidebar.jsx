@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart } from "lucide-react";
-import { useCart } from '../components/CartContext'; // Import the cart context
+import { useCart } from './CartContext';
 
 export default function Sidebar({ isOpen, onClose, product, sidebarType, animationClass }) {
   const [quantity, setQuantity] = useState(1);
@@ -11,7 +11,21 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
   
   // Use the cart context
   const { cartItems, addToCart, updateCartItemQuantity, removeFromCart, getCartTotal } = useCart();
+  
+  // Reset values when product changes
+  useEffect(() => {
+    if (isOpen) {
+      setQuantity(1);
+      setAddedToCartMessage('');
+      
+      // Reset selected variant when product changes
+      if (product && product.priceVariants && product.priceVariants.length > 0) {
+        setSelectedVariant(0);
+      }
+    }
+  }, [product, isOpen]);
 
+  // Update subtotal when quantity or variant changes
   useEffect(() => {
     if (product && product.priceVariants && product.priceVariants.length > 0) {
       const priceString = product.priceVariants[selectedVariant].price.toString().replace(/[^\d]/g, '');
@@ -22,12 +36,6 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
       setSubtotal(0);
     }
   }, [quantity, product, selectedVariant]);
-
-  useEffect(() => {
-    // Reset quantity and added message when sidebar opens with a new product
-    setQuantity(1);
-    setAddedToCartMessage('');
-  }, [product]);
 
   if (!isOpen) return null;
 
@@ -40,13 +48,14 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
   
   const handleAddToCart = () => {
     if (product) {
-      addToCart(product, quantity, selectedVariant);
-      setAddedToCartMessage('Added to cart!');
-      
-      // Clear the message after 3 seconds
-      setTimeout(() => {
-        setAddedToCartMessage('');
-      }, 3000);
+      addToCart(product, quantity, selectedVariant)
+        .then(isNew => {
+          setAddedToCartMessage(isNew ? 'Added to cart!' : 'Updated cart quantity!');
+          
+          setTimeout(() => {
+            setAddedToCartMessage('');
+          }, 3000);
+        });
     }
   };
 
@@ -55,16 +64,11 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
   };
 
   const handleUpdateCartQuantity = (productId, variantIndex, newQuantity) => {
-    if (newQuantity < 1) return;
     updateCartItemQuantity(productId, variantIndex, newQuantity);
   };
 
   const toggleSection = (section) => {
-    if (expandedSection === section) {
-      setExpandedSection(null);
-    } else {
-      setExpandedSection(section);
-    }
+    setExpandedSection(expandedSection === section ? null : section);
   };
 
   const getCurrentVariantUnit = () => {
@@ -211,6 +215,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
           <button 
             onClick={decrementQuantity}
             className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs"
+            type="button"
           >
             -
           </button>
@@ -218,6 +223,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
           <button 
             onClick={incrementQuantity}
             className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs"
+            type="button"
           >
             +
           </button>
@@ -236,7 +242,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
             {cartItems.map((item) => (
               <div key={`${item.product._id}-${item.selectedVariantIndex}`} className="border-b border-gray-200 pb-3 mb-3">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 border border-blue-300 rounded overflow-hidden mr-3">
+                  <div className="w-12 h-12 border border-gray-300 rounded overflow-hidden mr-3">
                     <img 
                       src={item.product.image} 
                       alt={item.product.name} 
@@ -250,12 +256,12 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
                         <h4 className="text-sm font-medium">{item.product.name}</h4>
                         {item.product.priceVariants && item.product.priceVariants.length > 0 && (
                           <span className="text-xs text-gray-500">
-                            {item.product.priceVariants[item.selectedVariantIndex].unit}
+                            {item.product.priceVariants[item.selectedVariantIndex]?.unit || ''}
                           </span>
                         )}
                       </div>
                       <span className="text-xs">
-                        Rs.{item.product.priceVariants[item.selectedVariantIndex].price}
+                        Rs.{item.product.priceVariants[item.selectedVariantIndex]?.price || 0}
                       </span>
                     </div>
                     
@@ -268,6 +274,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
                             item.quantity - 1
                           )}
                           className="px-1 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs"
+                          type="button"
                         >
                           -
                         </button>
@@ -279,6 +286,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
                             item.quantity + 1
                           )}
                           className="px-1 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs"
+                          type="button"
                         >
                           +
                         </button>
@@ -286,6 +294,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
                       <button 
                         onClick={() => handleRemove(item.product._id, item.selectedVariantIndex)}
                         className="text-gray-400 hover:text-gray-600 text-xs"
+                        type="button"
                       >
                         remove
                       </button>
@@ -302,6 +311,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
             <button 
               onClick={onClose}
               className="mt-4 px-4 py-2 bg-green-700 text-white rounded-full hover:bg-green-600 text-sm"
+              type="button"
             >
               Continue Shopping
             </button>
@@ -313,14 +323,16 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 md:w-1/2 lg:w-2/5 shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
+      className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 md:w-1/2 lg:w-2/5 shadow-lg z-50 ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       } ${animationClass || ''}`}
+      style={{ transition: 'transform 0.3s ease-in-out' }}
     >
       <div className="h-full p-4 flex flex-col">
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-700 hover:text-gray-900"
+          type="button"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -342,10 +354,14 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
                 <button 
                   className="w-full py-2 mb-2 bg-white border border-gray-300 rounded-full hover:bg-gray-50 text-center text-xs"
                   onClick={handleAddToCart}
+                  type="button"
                 >
                   Add to Cart
                 </button>
-                <button className="w-full py-2 bg-green-700 text-white rounded-full hover:bg-green-600 text-center text-xs">
+                <button 
+                  className="w-full py-2 bg-green-700 text-white rounded-full hover:bg-green-600 text-center text-xs"
+                  type="button"
+                >
                   Checkout
                 </button>
               </div>
@@ -362,6 +378,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
                     cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   disabled={cartItems.length === 0}
+                  type="button"
                 >
                   {cartItems.length > 0 ? 'Checkout' : 'Cart is Empty'}
                 </button>
