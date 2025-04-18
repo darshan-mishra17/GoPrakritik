@@ -127,9 +127,15 @@ export default function Login() {
         localStorage.setItem('user', JSON.stringify(data.data));
       }
 
+      // Check if there's a redirect path saved
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      
       // Redirect to user-specific shop after a short delay
       setTimeout(() => {
-        if (data.data && data.data._id) {
+        if (redirectPath) {
+          localStorage.removeItem('redirectAfterLogin'); // Clear the saved path
+          navigate(redirectPath); // Redirect to the saved path
+        } else if (data.data && data.data._id) {
           navigate(`/shop/${data.data._id}`);
         } else {
           navigate('/shop');
@@ -162,7 +168,7 @@ export default function Login() {
       <div className="flex items-center justify-center w-full h-full">
         <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
           <Navbar />
-
+          
           <div className="flex-1 flex items-center justify-center ">
             <div className="w-[20rem] md:w-[25rem] lg:w-[27rem] animate-fadeIn ">
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-5 shadow-lg border border-white/20 ">
