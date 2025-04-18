@@ -10,7 +10,7 @@ export default function Home() {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: 'url("./assets/bg.png")',
+          backgroundImage: 'url("/assets/bg.png")',
           zIndex: -1,
         }}
       />
@@ -21,7 +21,7 @@ export default function Home() {
         onMouseLeave={() => setIsHovering(false)}
       >
         <img
-          src="./assets/leaves.png"
+          src="/assets/leaves.png"
           alt="Leaf branch"
           className={`w-[20rem] sm:w-[18rem] md:w-[50rem] h-auto transform-gpu ${isHovering ? 'leaf-shake-right-pivot' : ''}`}
         />

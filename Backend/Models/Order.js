@@ -11,6 +11,7 @@ const orderItemSchema = new Schema({
   productType: { type: String },                    // Product / SpiceProduct / AttarProduct
 }, { _id: false });
 
+
 const deliveryAddressSchema = new Schema({
   fullName: { type: String, required: true },
   phone: { type: String, required: true },

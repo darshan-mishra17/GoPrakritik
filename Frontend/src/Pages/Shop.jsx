@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Lenis from '@studio-freight/lenis';
 import { useCart } from '../components/CartContext';
 
 export default function Shop() {
+  const { userId } = useParams(); // Still get userId from URL for product filtering
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [sidebarType, setSidebarType] = useState('');
@@ -32,9 +34,18 @@ export default function Shop() {
   const [categories, setCategories] = useState(['All']);
   const snapTimeoutRef = useRef(null);
 
-  const fetchProducts = async (queryParams = {}) => {
+  useEffect(() => {
+    fetchProducts(userId);
+  }, [userId]);
+
+  const fetchProducts = async (ownerId, queryParams = {}) => {
     try {
       setLoading(true);
+      
+      // Add ownerId to query params if provided
+      if (ownerId) {
+        queryParams.userId = ownerId;
+      }
       
       const queryString = Object.keys(queryParams)
         .filter(key => queryParams[key])
@@ -43,6 +54,11 @@ export default function Shop() {
       
       const url = `http://localhost:8075/api/products${queryString ? `?${queryString}` : ''}`;
       const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products: ${response.status}`);
+      }
+      
       const result = await response.json();
       
       if (result.success && result.data) {
@@ -63,10 +79,6 @@ export default function Shop() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -220,7 +232,7 @@ export default function Shop() {
         clearTimeout(snapTimeoutRef.current);
       }
     };
-  }, [isMobile, viewportWidth]);
+  }, [isMobile,viewportWidth]);
 
   useEffect(() => {
     const queryParams = {};
@@ -233,8 +245,8 @@ export default function Shop() {
       queryParams.search = filters.search;
     }
     
-    fetchProducts(queryParams);
-  }, [filters]); 
+    fetchProducts(userId, queryParams);
+  }, [filters, userId]); 
 
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value }));
@@ -266,7 +278,7 @@ export default function Shop() {
         price: productDetails.priceVariants && productDetails.priceVariants.length > 0 
           ? `Rs.${productDetails.priceVariants[0].price}` 
           : 'Price not available',
-        image: "./assets/testimg.png"
+        image: "/assets/testimg.png"
       };
       
       setSelectedProduct(formattedProduct);
@@ -391,7 +403,7 @@ export default function Shop() {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: 'url("./assets/bg.png")',
+          backgroundImage: 'url("/assets/bg.png")',
           zIndex: -1,
         }}
       />
@@ -399,6 +411,8 @@ export default function Shop() {
       <div className='flex items-center justify-center w-full h-full transition-all duration-300'>
         <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
           <Navbar openSidebar={openSidebar} />
+          
+          {/* Removed shop owner banner */}
           
           <div className="px-2 sm:px-4 md:px-6 py-1 md:py-3">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2 mb-1 sm:mb-2 md:mb-4">
@@ -417,7 +431,7 @@ export default function Shop() {
                   </button>
                 ))}
               </div>
-              
+
               <div className="w-full sm:w-auto mt-1 sm:mt-0">
                 <input
                   type="text"
@@ -443,7 +457,7 @@ export default function Shop() {
                 <div className="text-center py-2 sm:py-4">
                   <p className="text-white text-sm sm:text-base">Error loading products: {error}</p>
                   <button 
-                    onClick={() => fetchProducts()}
+                    onClick={() => fetchProducts(userId)}
                     className="mt-2 px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm bg-white text-green-700 rounded-full hover:bg-green-100 transition-all duration-300"
                   >
                     Try Again
@@ -482,7 +496,7 @@ export default function Shop() {
                             >
                               <div className="w-full h-56 md:h-44 overflow-hidden my-4 sm:my-2 md:my-3 rounded-lg transition-all duration-300">
                                 <img
-                                  src="./assets/testimg.png" 
+                                  src="/assets/testimg.png" 
                                   alt={product.productName}
                                   className={'w-full h-full object-contain transition-transform duration-500' }
                                 />

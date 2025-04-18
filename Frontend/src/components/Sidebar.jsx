@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart } from "lucide-react";
 import { useCart } from './CartContext';
+import CheckoutModal from './CheckoutModal';
 
 export default function Sidebar({ isOpen, onClose, product, sidebarType, animationClass }) {
   const [quantity, setQuantity] = useState(1);
@@ -8,6 +9,7 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
   const [expandedSection, setExpandedSection] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [addedToCartMessage, setAddedToCartMessage] = useState('');
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   
   // Use the cart context
   const { cartItems, addToCart, updateCartItemQuantity, removeFromCart, getCartTotal } = useCart();
@@ -36,8 +38,6 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
       setSubtotal(0);
     }
   }, [quantity, product, selectedVariant]);
-
-  if (!isOpen) return null;
 
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => {
@@ -85,8 +85,16 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
     return product?.price || 'Price not available';
   };
 
+  const handleCheckout = () => {
+    // Close the sidebar
+    onClose();
+    // Open the checkout modal
+    setIsCheckoutModalOpen(true);
+  };
+
   const renderProductDetails = () => (
     <div className="flex-1 overflow-y-auto scrollbar-hide">
+      {/* Product details content - unchanged */}
       <h3 className="text-lg font-semibold mb-3">Product Details</h3>
       
       <div className="flex flex-row gap-3 mb-4">
@@ -322,71 +330,81 @@ export default function Sidebar({ isOpen, onClose, product, sidebarType, animati
   );
 
   return (
-    <div
-      className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 md:w-1/2 lg:w-2/5 shadow-lg z-50 ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      } ${animationClass || ''}`}
-      style={{ transition: 'transform 0.3s ease-in-out' }}
-    >
-      <div className="h-full p-4 flex flex-col">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-700 hover:text-gray-900"
-          type="button"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+    <>
+      <div
+        className={`fixed top-0 right-0 h-full bg-white w-full sm:w-2/3 md:w-1/2 lg:w-2/5 shadow-lg z-50 ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        } ${animationClass || ''}`}
+        style={{ transition: 'transform 0.3s ease-in-out' }}
+      >
+        <div className="h-full p-4 flex flex-col">
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 text-gray-700 hover:text-gray-900"
+            type="button"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
 
-        <div className="flex flex-col h-full">
-          {sidebarType === 'details' ? renderProductDetails() : renderCart()}
-          
-          <div className="mt-2 sticky bottom-0 bg-white pt-2 pb-1">
-            {addedToCartMessage && (
-              <div className="mb-2 p-2 bg-green-100 text-green-700 text-center text-sm rounded-lg">
-                {addedToCartMessage}
-              </div>
-            )}
+          <div className="flex flex-col h-full">
+            {sidebarType === 'details' ? renderProductDetails() : renderCart()}
             
-            {sidebarType === 'details' ? (
-              <div>
-                <button 
-                  className="w-full py-2 mb-2 bg-white border border-gray-300 rounded-full hover:bg-gray-50 text-center text-xs"
-                  onClick={handleAddToCart}
-                  type="button"
-                >
-                  Add to Cart
-                </button>
-                <button 
-                  className="w-full py-2 bg-green-700 text-white rounded-full hover:bg-green-600 text-center text-xs"
-                  type="button"
-                >
-                  Checkout
-                </button>
-              </div>
-            ) : (
-              <div>
-                {cartItems.length > 0 && (
-                  <div className="flex justify-between items-center mb-2 text-sm font-medium">
-                    <span>SUBTOTAL</span>
-                    <span>Rs.{getCartTotal()}</span>
-                  </div>
-                )}
-                <button 
-                  className={`w-full py-2 bg-green-700 text-white rounded-full hover:bg-green-600 text-center text-xs ${
-                    cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                  disabled={cartItems.length === 0}
-                  type="button"
-                >
-                  {cartItems.length > 0 ? 'Checkout' : 'Cart is Empty'}
-                </button>
-              </div>
-            )}
+            <div className="mt-2 sticky bottom-0 bg-white pt-2 pb-1">
+              {addedToCartMessage && (
+                <div className="mb-2 p-2 bg-green-100 text-green-700 text-center text-sm rounded-lg">
+                  {addedToCartMessage}
+                </div>
+              )}
+              
+              {sidebarType === 'details' ? (
+                <div>
+                  <button 
+                    className="w-full py-2 mb-2 bg-white border border-gray-300 rounded-full hover:bg-gray-50 text-center text-xs"
+                    onClick={handleAddToCart}
+                    type="button"
+                  >
+                    Add to Cart
+                  </button>
+                  <button 
+                    className="w-full py-2 bg-green-700 text-white rounded-full hover:bg-green-600 text-center text-xs"
+                    type="button"
+                    onClick={handleCheckout}
+                  >
+                    Checkout
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  {cartItems.length > 0 && (
+                    <div className="flex justify-between items-center mb-2 text-sm font-medium">
+                      <span>SUBTOTAL</span>
+                      <span>Rs.{getCartTotal()}</span>
+                    </div>
+                  )}
+                  <button 
+                    className={`w-full py-2 bg-green-700 text-white rounded-full hover:bg-green-600 text-center text-xs ${
+                      cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                    disabled={cartItems.length === 0}
+                    type="button"
+                    onClick={handleCheckout}
+                  >
+                    {cartItems.length > 0 ? 'Checkout' : 'Cart is Empty'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Checkout Modal */}
+      <CheckoutModal 
+        isOpen={isCheckoutModalOpen} 
+        onClose={() => setIsCheckoutModalOpen(false)} 
+      />
+    </>
   );
 }

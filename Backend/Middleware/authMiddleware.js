@@ -4,7 +4,17 @@ import User from '../Models/User.js';
 const authMiddleware = async (req, res, next) => {
   try {
     // Get token from header
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    let token;
+    
+    // Check Authorization header first
+    const authHeader = req.header('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.replace('Bearer ', '');
+    } 
+    // Check if token is in cookies
+    else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
     
     if (!token) {
       return res.status(401).json({
@@ -28,15 +38,31 @@ const authMiddleware = async (req, res, next) => {
     // Add user to request
     req.user = {
       id: user._id,
+      name: user.name,
+      email: user.email,
       isAdmin: user.isAdmin
     };
     
     next();
   } catch (error) {
-    console.error(error);
+    console.error('Auth middleware error:', error.message);
+    
+    // Handle different types of JWT errors
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    } else if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired'
+      });
+    }
+    
     res.status(401).json({
       success: false,
-      message: 'Token is not valid'
+      message: 'Authentication failed'
     });
   }
 };
