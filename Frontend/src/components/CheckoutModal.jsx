@@ -345,7 +345,6 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                   {/* Delivery Address - Now using full width */}
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-3">
-                      <h3 className="font-medium text-gray-800">Delivery Address</h3>
                     </div>
                     
                     <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
@@ -369,7 +368,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                             value={deliveryAddress.phone}
                             onChange={handleInputChange}
                             className={`w-full px-4 py-3 text-sm border rounded-full focus:ring-2 focus:ring-green-500 focus:border-green-500 ${errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-                            placeholder="10-digit mobile number*"
+                            placeholder="mobile number*"
                           />
                           {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                         </div>
