@@ -5,6 +5,7 @@ import Shop from "./Pages/Shop";
 import About from "./Pages/About";
 import { CartProvider } from "./components/CartContext";
 import Login from "./Pages/Login";
+import ProfilePage from "./Pages/Profile";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/shop/:userId" element={<Shop />} />
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </BrowserRouter>
     </CartProvider>

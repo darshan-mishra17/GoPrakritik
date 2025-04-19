@@ -9,7 +9,7 @@ export default function Navbar({ openSidebar }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [_showDropdown, _setShowDropdown] = useState(false);
   
   useEffect(() => {
     // Get user data from localStorage
@@ -39,12 +39,16 @@ export default function Navbar({ openSidebar }) {
     }
   };
   
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    navigate('/');
-    setShowDropdown(false);
+  // const handleLogout = () => {
+  //   localStorage.removeItem('token');
+  //   localStorage.removeItem('user');
+  //   setUser(null);
+  //   navigate('/');
+  //   setShowDropdown(false);
+  // };
+
+  const handleProfileClick = () => {
+    navigate('/profile');
   };
   
   return (
@@ -104,7 +108,7 @@ export default function Navbar({ openSidebar }) {
           <div className="relative">
             <div 
               className="flex items-center gap-2 cursor-pointer" 
-              onClick={() => setShowDropdown(!showDropdown)}
+              onClick={handleProfileClick}
             >
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
                 <User className="w-5 h-5" />
@@ -113,23 +117,6 @@ export default function Navbar({ openSidebar }) {
                 {user.name}
               </span>
             </div>
-            
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
-                <div className="py-1">
-                  <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
-                    Signed in as <span className="font-semibold">{user.name}</span>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Sign out
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <Link to="/login" className="text-white text-lg relative group">
