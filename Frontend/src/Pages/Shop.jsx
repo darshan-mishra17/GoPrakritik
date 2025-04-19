@@ -4,9 +4,10 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Lenis from '@studio-freight/lenis';
 import { useCart } from '../components/CartContext';
+import CheckoutModal from '../components/CheckoutModal';
 
 export default function Shop() {
-  const { userId } = useParams(); // Still get userId from URL for product filtering
+  const { userId } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [sidebarType, setSidebarType] = useState('');
@@ -18,10 +19,12 @@ export default function Shop() {
     category: '',
     search: ''
   });
+
   const [activeCategory, setActiveCategory] = useState('All');
   const [_hoveredCardId, setHoveredCardId] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(0);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   // Use the cart context
   const { addToCart } = useCart();
@@ -79,7 +82,7 @@ export default function Shop() {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     const checkIfMobile = () => {
       const width = window.innerWidth;
@@ -95,6 +98,7 @@ export default function Shop() {
     };
   }, []);
 
+
   useEffect(() => {
     if (!isMobile) {
       lenisRef.current = new Lenis({
@@ -102,6 +106,8 @@ export default function Shop() {
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         smoothWheel: true,
         infinite: false,
+        wrapper: document.querySelector('.main-content-wrapper'),
+        content: document.querySelector('.main-content-wrapper'),
       });
 
       function raf(time) {
@@ -113,15 +119,26 @@ export default function Shop() {
 
       requestAnimationFrame(raf);
 
+      // Pause Lenis when modal or sidebar is open
+      if (sidebarOpen || isCheckoutModalOpen) {
+        if (lenisRef.current) {
+          lenisRef.current.stop();
+        }
+      } else {
+        if (lenisRef.current) {
+          lenisRef.current.start();
+        }
+      }
+
       return () => {
         if (lenisRef.current) {
           lenisRef.current.destroy();
         }
       };
     }
-  }, [isMobile]);
+  }, [isMobile, sidebarOpen, isCheckoutModalOpen]);
 
-  const handleTouchStart = (e) => {
+const handleTouchStart = (e) => {
     if (!sliderRef.current) return;
     isDraggingRef.current = true;
     startXRef.current = e.touches[0].pageX;
@@ -232,7 +249,7 @@ export default function Shop() {
         clearTimeout(snapTimeoutRef.current);
       }
     };
-  }, [isMobile,viewportWidth]);
+  }, [isMobile, viewportWidth]);
 
   useEffect(() => {
     const queryParams = {};
@@ -266,6 +283,14 @@ export default function Shop() {
       setSelectedProduct(null);
       setSidebarType(type);
       setSidebarOpen(true);
+      return;
+    }
+    
+    if (type === 'checkout') {
+      // Close sidebar if it's open
+      setSidebarOpen(false);
+      // Open checkout modal
+      setIsCheckoutModalOpen(true);
       return;
     }
     
@@ -396,7 +421,21 @@ export default function Shop() {
     .category-btn-active {
       animation: pulse 2s infinite;
     }
+    
+    .modal-active {
+      -webkit-overflow-scrolling: none;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    @media (max-width: 768px) {
+      .modal-active {
+        position: fixed;
+        width: 100%;
+      }
+    }
   `;
+
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -409,10 +448,8 @@ export default function Shop() {
       />
       
       <div className='flex items-center justify-center w-full h-full transition-all duration-300'>
-        <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
+        <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4 main-content-wrapper">
           <Navbar openSidebar={openSidebar} />
-          
-          {/* Removed shop owner banner */}
           
           <div className="px-2 sm:px-4 md:px-6 py-1 md:py-3">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2 mb-1 sm:mb-2 md:mb-4">
@@ -431,7 +468,7 @@ export default function Shop() {
                   </button>
                 ))}
               </div>
-
+              
               <div className="w-full sm:w-auto mt-1 sm:mt-0">
                 <input
                   type="text"
@@ -538,15 +575,26 @@ export default function Shop() {
               )}
             </div>
           </div>
+        
         </div>
       </div>
-
+      
       <Sidebar 
         isOpen={sidebarOpen}
         onClose={closeSidebar} 
         product={selectedProduct} 
         sidebarType={sidebarType}
-        animationClass={sidebarOpen ? "sidebar-open" : "sidebar-close"} 
+        animationClass={sidebarOpen ? "sidebar-open" : "sidebar-close"}
+        handleCheckout={() => {
+          closeSidebar();
+          setIsCheckoutModalOpen(true);
+        }}
+      />
+
+      {/* Checkout Modal */}
+      <CheckoutModal 
+        isOpen={isCheckoutModalOpen} 
+        onClose={() => setIsCheckoutModalOpen(false)} 
       />
 
       {sidebarOpen && (
