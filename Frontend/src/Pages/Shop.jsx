@@ -55,7 +55,7 @@ export default function Shop() {
         .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
         .join('&');
       
-      const url = `http://localhost:8075/api/products${queryString ? `?${queryString}` : ''}`;
+      const url = `http://localhost:8090/api/products${queryString ? `?${queryString}` : ''}`;
       const response = await fetch(url);
       
       if (!response.ok) {
