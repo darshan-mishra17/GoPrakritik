@@ -7,7 +7,7 @@ import { useCart } from '../components/CartContext';
 import CheckoutModal from '../components/CheckoutModal';
 
 export default function Shop() {
-  const { userId } = useParams(); // Still get userId from URL for product filtering
+  const { userId } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [sidebarType, setSidebarType] = useState('');
@@ -19,6 +19,7 @@ export default function Shop() {
     category: '',
     search: ''
   });
+
   const [activeCategory, setActiveCategory] = useState('All');
   const [_hoveredCardId, setHoveredCardId] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -81,7 +82,7 @@ export default function Shop() {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     const checkIfMobile = () => {
       const width = window.innerWidth;
@@ -97,6 +98,7 @@ export default function Shop() {
     };
   }, []);
 
+
   useEffect(() => {
     if (!isMobile) {
       lenisRef.current = new Lenis({
@@ -104,6 +106,8 @@ export default function Shop() {
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         smoothWheel: true,
         infinite: false,
+        wrapper: document.querySelector('.main-content-wrapper'),
+        content: document.querySelector('.main-content-wrapper'),
       });
 
       function raf(time) {
@@ -115,15 +119,26 @@ export default function Shop() {
 
       requestAnimationFrame(raf);
 
+      // Pause Lenis when modal or sidebar is open
+      if (sidebarOpen || isCheckoutModalOpen) {
+        if (lenisRef.current) {
+          lenisRef.current.stop();
+        }
+      } else {
+        if (lenisRef.current) {
+          lenisRef.current.start();
+        }
+      }
+
       return () => {
         if (lenisRef.current) {
           lenisRef.current.destroy();
         }
       };
     }
-  }, [isMobile]);
+  }, [isMobile, sidebarOpen, isCheckoutModalOpen]);
 
-  const handleTouchStart = (e) => {
+const handleTouchStart = (e) => {
     if (!sliderRef.current) return;
     isDraggingRef.current = true;
     startXRef.current = e.touches[0].pageX;
@@ -408,7 +423,6 @@ export default function Shop() {
     }
     
     .modal-active {
-      touch-action: none;
       -webkit-overflow-scrolling: none;
       overflow: hidden;
       overscroll-behavior: none;
@@ -422,6 +436,7 @@ export default function Shop() {
     }
   `;
 
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <div
@@ -433,7 +448,7 @@ export default function Shop() {
       />
       
       <div className='flex items-center justify-center w-full h-full transition-all duration-300'>
-        <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
+        <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4 main-content-wrapper">
           <Navbar openSidebar={openSidebar} />
           
           <div className="px-2 sm:px-4 md:px-6 py-1 md:py-3">
@@ -560,9 +575,10 @@ export default function Shop() {
               )}
             </div>
           </div>
+        
         </div>
       </div>
-
+      
       <Sidebar 
         isOpen={sidebarOpen}
         onClose={closeSidebar} 
