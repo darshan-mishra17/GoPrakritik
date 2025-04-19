@@ -15,7 +15,36 @@ const addressSchema = new Schema({
   type: { type: String, enum: ['Home', 'Work'], default: 'Home' }
 });
 
-// User Schema
+// Cart Item Schema (for storing product references)
+const cartItemSchema = new Schema({
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product', // Reference to the Product model
+    required: true
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    default: 1,
+    min: [1, 'Quantity must be at least 1']
+  },
+  selectedSize: {  // Optional: If your products have sizes (e.g., S, M, L)
+    type: String,
+    default: null
+  },
+
+  selectedColor: {  // Optional: If your products have color variants
+    type: String,
+    default: null
+  },
+  
+  addedAt: {
+    type: Date,
+    default: Date.now
+  }
+}, { _id: false }); // Prevents Mongoose from auto-generating IDs for subdocuments
+
+// Main User Schema
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -46,6 +75,11 @@ const userSchema = new mongoose.Schema({
     default: false
   },
   addresses: [addressSchema],
+  cart: [cartItemSchema],  // Stores user's cart items
+  wishlist: [{  // Optional: If you want a wishlist feature
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product'
+  }],
   createdAt: {
     type: Date,
     default: Date.now
@@ -54,7 +88,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Add index for faster queries
+// Indexes for faster queries
 userSchema.index({ email: 1, phone: 1 });
 
 const User = mongoose.model('User', userSchema);

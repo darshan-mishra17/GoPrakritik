@@ -12,8 +12,8 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-  origin: ['http://localhost:5173'], // Replace with your Vite app's port
-  credentials: true // If you need to send cookies
+  origin: ['http://localhost:5173'], 
+  credentials: true 
 }));
 
 // Routes
@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 5001;
 
 // Connect to DB first, then start server
 connectDB().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {  // Fixed parameter order
+  app.listen(PORT, '0.0.0.0', () => { 
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 }).catch(err => {
