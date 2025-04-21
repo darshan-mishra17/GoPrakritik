@@ -1,6 +1,7 @@
 import User from '../Models/User.js';
-import Order from '../Models/Order.js'; // Assuming you have an Order model
+import Order from '../Models/Order.js'; 
 import mongoose from 'mongoose';
+import {Product} from '../Models/Product.js';
 
 // Error handler utility
 const handleError = (res, error, statusCode = 500) => {
@@ -375,6 +376,304 @@ const UserController = {
       res.status(200).json({
         success: true,
         data: order
+      });
+    } catch (error) {
+      handleError(res, error);
+    }
+  },
+
+  // CART MANAGEMENT FUNCTIONS
+
+  // Get user's cart
+  getCart: async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Check if userId is valid
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid user ID format'
+        });
+      }
+      
+      // Check if user is requesting their own cart or is admin
+      if (req.user.id !== userId && !req.user.isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only view your own cart'
+        });
+      }
+      
+      // Find user and populate cart items with product details
+      const user = await User.findById(userId)
+        .select('cart')
+        .populate('cart.productId');
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+      
+      // Calculate cart total
+      let cartTotal = 0;
+      if (user.cart && user.cart.length > 0) {
+        for (const item of user.cart) {
+          if (item.productId && item.productId.priceVariants && 
+              item.productId.priceVariants[item.selectedVariantIndex]) {
+            const priceString = item.productId.priceVariants[item.selectedVariantIndex].price
+              .toString().replace(/[^\d]/g, '');
+            const price = parseInt(priceString, 10);
+            cartTotal += price * item.quantity;
+          }
+        }
+      }
+      
+      res.status(200).json({
+        success: true,
+        data: {
+          items: user.cart,
+          total: cartTotal
+        }
+      });
+    } catch (error) {
+      handleError(res, error);
+    }
+  },
+
+  // Add item to cart
+  addToCart: async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { productId, quantity = 1, selectedVariantIndex = 0 } = req.body;
+      
+      // Check if IDs are valid
+      if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(productId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid ID format'
+        });
+      }
+      
+      // Check if user is updating their own cart or is admin
+      if (req.user.id !== userId && !req.user.isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only update your own cart'
+        });
+      }
+      
+      // Verify product exists
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: 'Product not found'
+        });
+      }
+      
+      // Find user
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+      
+      // Check if product already exists in cart
+      const cartItemIndex = user.cart.findIndex(item => 
+        item.productId.toString() === productId && 
+        item.selectedVariantIndex === selectedVariantIndex
+      );
+      
+      let updatedUser;
+      let message;
+      
+      if (cartItemIndex >= 0) {
+        // Update quantity if item already exists
+        user.cart[cartItemIndex].quantity += quantity;
+        message = 'Cart item quantity updated';
+      } else {
+        // Add new item to cart
+        user.cart.push({
+          productId,
+          quantity,
+          selectedVariantIndex,
+          addedAt: new Date()
+        });
+        message = 'Item added to cart';
+      }
+      
+      // Save the updated user
+      await user.save();
+      
+      // Get updated cart with product details
+      updatedUser = await User.findById(userId)
+        .select('cart')
+        .populate('cart.productId');
+      
+      res.status(200).json({
+        success: true,
+        message,
+        data: updatedUser.cart
+      });
+    } catch (error) {
+      handleError(res, error);
+    }
+  },
+
+  // Update cart item quantity
+  updateCartItem: async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { productId, selectedVariantIndex = 0, quantity } = req.body;
+      
+      // Check if IDs are valid
+      if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(productId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid ID format'
+        });
+      }
+      
+      // Check if user is updating their own cart or is admin
+      if (req.user.id !== userId && !req.user.isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only update your own cart'
+        });
+      }
+      
+      // Validate quantity
+      if (!quantity || quantity < 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Quantity must be at least 1'
+        });
+      }
+      
+      // Find user and update cart item
+      const user = await User.findOneAndUpdate(
+        { 
+          _id: userId, 
+          "cart.productId": productId,
+          "cart.selectedVariantIndex": selectedVariantIndex
+        },
+        { $set: { "cart.$.quantity": quantity } },
+        { new: true }
+      ).populate('cart.productId');
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User or cart item not found'
+        });
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: 'Cart item updated',
+        data: user.cart
+      });
+    } catch (error) {
+      handleError(res, error);
+    }
+  },
+
+  // Remove item from cart
+  removeFromCart: async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { productId, selectedVariantIndex = 0 } = req.body;
+      
+      // Check if IDs are valid
+      if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(productId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid ID format'
+        });
+      }
+      
+      // Check if user is updating their own cart or is admin
+      if (req.user.id !== userId && !req.user.isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only update your own cart'
+        });
+      }
+      
+      // Find user and remove cart item
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { 
+          $pull: { 
+            cart: { 
+              productId: productId,
+              selectedVariantIndex: selectedVariantIndex
+            } 
+          } 
+        },
+        { new: true }
+      ).populate('cart.productId');
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: 'Item removed from cart',
+        data: user.cart
+      });
+    } catch (error) {
+      handleError(res, error);
+    }
+  },
+
+  // Clear cart
+  clearCart: async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Check if userId is valid
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid user ID format'
+        });
+      }
+      
+      // Check if user is updating their own cart or is admin
+      if (req.user.id !== userId && !req.user.isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only update your own cart'
+        });
+      }
+      
+      // Find user and clear cart
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { $set: { cart: [] } },
+        { new: true }
+      );
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: 'Cart cleared successfully'
       });
     } catch (error) {
       handleError(res, error);

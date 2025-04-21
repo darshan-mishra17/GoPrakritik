@@ -17,7 +17,7 @@ const addressSchema = new Schema({
 
 // Cart Item Schema (for storing product references)
 const cartItemSchema = new Schema({
-  product: {
+  productId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Product', // Reference to the Product model
     required: true
@@ -28,16 +28,10 @@ const cartItemSchema = new Schema({
     default: 1,
     min: [1, 'Quantity must be at least 1']
   },
-  selectedSize: {  // Optional: If your products have sizes (e.g., S, M, L)
-    type: String,
-    default: null
+  selectedVariantIndex: {
+    type: Number,
+    default: 0
   },
-
-  selectedColor: {  // Optional: If your products have color variants
-    type: String,
-    default: null
-  },
-  
   addedAt: {
     type: Date,
     default: Date.now
@@ -63,7 +57,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Phone number is required'],
     unique: true,
-    trim: true
+    trim: true,
+    minlength: 10,
   },
   password: {
     type: String,

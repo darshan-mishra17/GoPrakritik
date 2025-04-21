@@ -83,8 +83,8 @@ export default function Login() {
 
       // API endpoints based on action
       const endpoint = isSignIn
-        ? 'http://localhost:8075/api/user/login'
-        : 'http://localhost:8075/api/user/register';
+        ? 'http://localhost:8090/api/user/login'
+        : 'http://localhost:8090/api/user/register';
 
       // Prepare request data
       const requestData = isSignIn
