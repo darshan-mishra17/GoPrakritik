@@ -13,7 +13,7 @@ const handleError = (res, error, statusCode = 500) => {
 };
 
 const UserController = {
-  // Get all users (admin only)
+
   getAllUsers: async (req, res) => {
     try {
       const users = await User.find().select('-password');
@@ -28,7 +28,6 @@ const UserController = {
     }
   },
 
-  // Get user by ID
   getUserById: async (req, res) => {
     try {
       const { id } = req.params;
@@ -50,7 +49,6 @@ const UserController = {
         });
       }
       
-      // Check if user is requesting their own data or is admin
       if (req.user.id !== id && !req.user.isAdmin) {
         return res.status(403).json({
           success: false,
@@ -67,13 +65,11 @@ const UserController = {
     }
   },
 
-  // Update user
   updateUser: async (req, res) => {
     try {
       const { id } = req.params;
       const { name, phone } = req.body;
       
-      // Check if ID is valid
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
@@ -81,7 +77,6 @@ const UserController = {
         });
       }
       
-      // Check if user is updating their own data or is admin
       if (req.user.id !== id && !req.user.isAdmin) {
         return res.status(403).json({
           success: false,
@@ -89,7 +84,6 @@ const UserController = {
         });
       }
       
-      // Find user and update
       const updatedUser = await User.findByIdAndUpdate(
         id,
         { 
@@ -149,7 +143,6 @@ const UserController = {
     }
   },
 
-  // Add address to user
   addAddress: async (req, res) => {
     try {
       const { userId } = req.params;
@@ -163,7 +156,6 @@ const UserController = {
         });
       }
       
-      // Check if user is adding to their own profile
       if (req.user.id !== userId && !req.user.isAdmin) {
         return res.status(403).json({
           success: false,
@@ -171,7 +163,6 @@ const UserController = {
         });
       }
       
-      // Validate required address fields
       const requiredFields = ['fullName', 'phone', 'pincode', 'house', 'area', 'city', 'state'];
       for (const field of requiredFields) {
         if (!addressData[field]) {
@@ -182,13 +173,11 @@ const UserController = {
         }
       }
       
-      // Create a new address with a unique ID
       const newAddress = {
         _id: new mongoose.Types.ObjectId(),
         ...addressData
       };
       
-      // Add address to user's addresses array
       const user = await User.findByIdAndUpdate(
         userId,
         { $push: { addresses: newAddress } },
@@ -457,7 +446,6 @@ const UserController = {
         });
       }
       
-      // Check if user is updating their own cart or is admin
       if (req.user.id !== userId && !req.user.isAdmin) {
         return res.status(403).json({
           success: false,

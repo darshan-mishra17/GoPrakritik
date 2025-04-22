@@ -313,7 +313,6 @@ const CheckoutModal = ({ isOpen, onClose }) => {
           </div>
         </div>
         
-        {/* Scrollable content area */}
         <div 
           className="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50" 
           style={{ 
@@ -342,7 +341,6 @@ const CheckoutModal = ({ isOpen, onClose }) => {
             <form onSubmit={handleCheckout}>
               {step === 1 ? (
                 <div>
-                  {/* Delivery Address - Now using full width */}
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-3">
                     </div>
@@ -477,7 +475,6 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {/* Order review */}
                   <div>
                     <h3 className="font-medium text-gray-800 mb-3">Order Review</h3>
                     <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
@@ -503,7 +500,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div>
                           <h4 className="text-sm font-medium text-gray-700 mb-2">Payment Method</h4>
                           <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
@@ -592,7 +589,6 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                     </div>
                   </div>
                   
-                  {/* Security badges */}
                   <div className="flex items-center justify-center space-x-4 py-2">
                     <div className="flex items-center text-gray-500 text-xs">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -620,7 +616,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                     Back
                   </button>
                 )}
-                
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -640,7 +636,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
           )}
         </div>
       </div>
-      
+
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
@@ -658,7 +654,6 @@ const CheckoutModal = ({ isOpen, onClose }) => {
           background: #16a34a;
         }
         
-        /* Added for larger devices */
         @media (min-width: 768px) {
           ::-webkit-scrollbar {
             width: 8px;

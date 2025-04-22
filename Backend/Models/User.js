@@ -15,11 +15,10 @@ const addressSchema = new Schema({
   type: { type: String, enum: ['Home', 'Work'], default: 'Home' }
 });
 
-// Cart Item Schema (for storing product references)
 const cartItemSchema = new Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product', // Reference to the Product model
+    ref: 'Product', 
     required: true
   },
   quantity: {
@@ -79,7 +78,8 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-}, {
+},
+{
   timestamps: true
 });
 

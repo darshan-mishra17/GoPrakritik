@@ -84,15 +84,11 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    // Only remove authentication-related items
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    
-    // Do NOT remove or clear cart items
-    // localStorage.removeItem('cart'); - Remove this line if it exists
-    // localStorage.clear(); - Don't use this as it clears everything
-    
-    // Redirect user
+    localStorage.removeItem('cart');
+    window.location.reload();
+
     navigate('/');
   };
 
