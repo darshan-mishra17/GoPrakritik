@@ -10,10 +10,11 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-
 app.use(cors({
-  origin: ['http://localhost:5173'], 
-  credentials: true 
+  origin: ['http://localhost:5001', 'http://localhost:5173', 'https://accounts.google.com'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Routes

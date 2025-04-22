@@ -14,14 +14,11 @@ const handleError = (res, error, statusCode = 500) => {
 
 const UserController = {
 
-<<<<<<< HEAD
-=======
   // Create a new user
   createUser: async (req, res) => {
     try {
       let { name, email, phone, password, addresses, cart, wishlist } = req.body;
   
-      // Trim and normalize email & phone
       email = email.trim().toLowerCase();
       phone = phone.trim();
   
@@ -61,7 +58,6 @@ const UserController = {
   },
 
   // Get all users (admin only)
->>>>>>> 6acdfcb1a187692643e682ff5ef2f2b8079ca1b2
   getAllUsers: async (req, res) => {
     try {
       const users = await User.find().select('-password');
