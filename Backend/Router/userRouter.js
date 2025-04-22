@@ -10,9 +10,9 @@ const router = express.Router();
 router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 
-// Admin-only routes
 router.route('/')
-  .get(authMiddleware, adminMiddleware, UserController.getAllUsers);
+  .get(authMiddleware, adminMiddleware, UserController.getAllUsers)
+  .post(authMiddleware, adminMiddleware, UserController.createUser);
 
 // User CRUD routes
 router.route('/:id')
