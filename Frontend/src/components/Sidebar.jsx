@@ -79,6 +79,24 @@ export default function Sidebar({
     }
   };
 
+  // New function to handle checkout from product details
+  const handleCheckoutFromDetails = () => {
+    if (sidebarType === "details" && product) {
+      // First add the current product to cart
+      setAddedToCartMessage("Adding to cart before checkout...");
+      
+      addToCart(product, quantity, selectedVariant).then(() => {
+        // Short delay to show the message before redirecting
+        setTimeout(() => {
+          handleCheckout();
+        }, 800);
+      });
+    } else {
+      // If we're already in the cart view, just proceed to checkout
+      handleCheckout();
+    }
+  };
+
   const handleRemove = (productId, variantIndex) => {
     removeFromCart(productId, variantIndex);
   };
@@ -447,7 +465,7 @@ export default function Sidebar({
                 <button
                   className="w-full py-2 bg-green-700 text-white rounded-full hover:bg-green-600 text-center text-xs"
                   type="button"
-                  onClick={handleCheckout}
+                  onClick={handleCheckoutFromDetails}
                 >
                   Checkout
                 </button>

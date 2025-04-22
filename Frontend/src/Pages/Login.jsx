@@ -365,7 +365,7 @@ export default function Login() {
                   </button>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-white/20">
+                <div className="mt-4 pt-3 bg-transparent">
                   <div className="flex justify-center">
                     <GoogleLogin
                       onSuccess={handleGoogleLoginSuccess}
