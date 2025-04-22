@@ -86,6 +86,9 @@ export default function ProfilePage() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('cart');
+    window.location.reload();
+
     navigate('/');
   };
 
@@ -392,7 +395,7 @@ export default function ProfilePage() {
                                         </div>
                                       ))}
                                     </div>
-                                    
+                                                                       
                                     <div className="mt-6 border-t border-white/20 pt-4">
                                       <div className="flex justify-between text-lg font-medium">
                                         <span className="text-white/80">Total</span>

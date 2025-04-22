@@ -1,13 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// Create both contexts
 const CartContext = createContext();
+const UserContext = createContext();
 
+// Custom hooks to use the contexts
 export function useCart() {
   return useContext(CartContext);
 }
 
-export function CartProvider({ children }) {
-  // Initialize state from localStorage or empty array
+export function useUser() {
+  return useContext(UserContext);
+}
+
+export function AppProvider({ children }) {
+  // Cart state
   const [cartItems, setCartItems] = useState(() => {
     try {
       const savedCart = localStorage.getItem('cart');
@@ -17,15 +24,194 @@ export function CartProvider({ children }) {
       return [];
     }
   });
-  
-  // Save cart to localStorage whenever it changes
+
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Fetch user data with proper error handling
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      
+      // Check if token exists before making request
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        return null;
+      }
+      
+      const response = await fetch('http://localhost:8090/api/user', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token is invalid or expired
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          throw new Error('Authentication failed - please log in again');
+        }
+        throw new Error(`Failed to fetch user data: ${response.status}`);
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+      setIsAuthenticated(true);
+      
+      // If user has a cart in their profile, use that
+      if (userData.cart && userData.cart.length > 0) {
+        setCartItems(userData.cart);
+      }
+      
+      return userData;
+    } catch (err) {
+      setError(err.message);
+      setIsAuthenticated(false);
+      console.error('Error fetching user data:', err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Login function
+  const login = async (credentials) => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch('http://localhost:8090/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(credentials)
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      
+      // Store token and set authenticated state
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setIsAuthenticated(true);
+      setUser(data.user);
+      
+      // Fetch user data after successful login
+      await fetchUserData();
+      
+      return true;
+    } catch (err) {
+      setError(err.message);
+      console.error('Login error:', err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Logout function
+  const logout = () => {
+    // Clear user state
+    setUser(null);
+    setIsAuthenticated(false);
+    
+    // Clear localStorage items related to authentication
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Clear cart state
+    setCartItems([]);
+    localStorage.removeItem('cart');
+  };
+
+  // Update user data
+  const updateUser = async (userData) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+      
+      const response = await fetch('http://localhost:8090/api/user', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(userData),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user data');
+      }
+
+      const updatedUser = await response.json();
+      setUser(updatedUser);
+      return updatedUser;
+    } catch (err) {
+      console.error('Error updating user:', err);
+      throw err;
+    }
+  };
+
+  // Save cart to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
-  
+    if (cartItems.length > 0) {
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+    } else {
+      localStorage.removeItem('cart');
+    }
+    
+    // If user is authenticated, save cart to database
+    if (isAuthenticated && user) {
+      saveCartToDatabase();
+    }
+  }, [cartItems, isAuthenticated, user]);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchUserData();
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const saveCartToDatabase = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !user) return;
+      
+      await fetch(`http://localhost:8090/api/user/${user._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ cart: cartItems }),
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Error saving cart to database:', error);
+    }
+  };
+
+  // Cart functions
   const addToCart = (product, quantity, selectedVariantIndex) => {
     setCartItems(prevItems => {
-      // Check if this product variant is already in the cart
       const existingItemIndex = prevItems.findIndex(item => 
         item.product._id === product._id && 
         item.selectedVariantIndex === selectedVariantIndex
@@ -45,7 +231,6 @@ export function CartProvider({ children }) {
       }
     });
     
-    // For consistency with the original, return a Promise
     return Promise.resolve(true);
   };
   
@@ -71,7 +256,6 @@ export function CartProvider({ children }) {
   
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
-      // Make sure we have priceVariants and the selected index exists
       if (!item.product.priceVariants || 
           !item.product.priceVariants[item.selectedVariantIndex]) {
         return total;
@@ -90,9 +274,11 @@ export function CartProvider({ children }) {
   
   const clearCart = () => {
     setCartItems([]);
+    localStorage.removeItem('cart');
   };
-  
-  const value = {
+
+  // Cart context value
+  const cartValue = {
     cartItems,
     addToCart,
     updateCartItemQuantity,
@@ -101,10 +287,29 @@ export function CartProvider({ children }) {
     getCartItemCount,
     clearCart
   };
+
+  // User context value
+  const userValue = {
+    user,
+    loading,
+    error,
+    isAuthenticated,
+    login,
+    logout,
+    fetchUserData,
+    updateUser
+  };
   
   return (
-    <CartContext.Provider value={value}>
-      {children}
-    </CartContext.Provider>
+    <UserContext.Provider value={userValue}>
+      <CartContext.Provider value={cartValue}>
+        {children}
+      </CartContext.Provider>
+    </UserContext.Provider>
   );
+}
+
+// For backward compatibility
+export function CartProvider({ children }) {
+  return <AppProvider>{children}</AppProvider>;
 }
