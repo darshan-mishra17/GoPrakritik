@@ -19,7 +19,6 @@ const UserController = {
     try {
       let { name, email, phone, password, addresses, cart, wishlist } = req.body;
   
-      // Trim and normalize email & phone
       email = email.trim().toLowerCase();
       phone = phone.trim();
   
