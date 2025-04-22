@@ -12,8 +12,57 @@ const handleError = (res, error, statusCode = 500) => {
   });
 };
 
+
 const UserController = {
 
+<<<<<<< HEAD
+=======
+  // Create a new user
+  createUser: async (req, res) => {
+    try {
+      let { name, email, phone, password, addresses, cart, wishlist } = req.body;
+  
+      // Trim and normalize email & phone
+      email = email.trim().toLowerCase();
+      phone = phone.trim();
+  
+      console.log("Checking for existing user with:", email, phone);
+  
+      // Check if user already exists
+      const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'User with given email or phone already exists'
+        });
+      }
+  
+      const newUser = await User.create({
+        name,
+        email,
+        phone,
+        password,
+        addresses,
+        cart,
+        wishlist
+      });
+  
+      const userResponse = newUser.toObject();
+      delete userResponse.password;
+  
+      res.status(201).json({
+        success: true,
+        message: 'User created successfully',
+        data: userResponse
+      });
+    } catch (error) {
+      console.error('Validation Error Details:', error);
+      handleError(res, error);
+    }
+  },
+
+  // Get all users (admin only)
+>>>>>>> 6acdfcb1a187692643e682ff5ef2f2b8079ca1b2
   getAllUsers: async (req, res) => {
     try {
       const users = await User.find().select('-password');
