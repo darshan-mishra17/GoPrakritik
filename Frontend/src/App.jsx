@@ -18,7 +18,7 @@ export default function App() {
           <Route path="/shop/:userId" element={<Shop />} />
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/:userId" element={<ProfilePage />} />
         </Routes>
       </BrowserRouter>
     </CartProvider>

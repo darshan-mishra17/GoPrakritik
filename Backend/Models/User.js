@@ -15,11 +15,10 @@ const addressSchema = new Schema({
   type: { type: String, enum: ['Home', 'Work'], default: 'Home' }
 });
 
-// Cart Item Schema (for storing product references)
 const cartItemSchema = new Schema({
-  product: {
+  productId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product', // Reference to the Product model
+    ref: 'Product', 
     required: true
   },
   quantity: {
@@ -28,21 +27,15 @@ const cartItemSchema = new Schema({
     default: 1,
     min: [1, 'Quantity must be at least 1']
   },
-  selectedSize: {  // Optional: If your products have sizes (e.g., S, M, L)
-    type: String,
-    default: null
+  selectedVariantIndex: {
+    type: Number,
+    default: 0
   },
-
-  selectedColor: {  // Optional: If your products have color variants
-    type: String,
-    default: null
-  },
-  
   addedAt: {
     type: Date,
     default: Date.now
   }
-}, { _id: false }); // Prevents Mongoose from auto-generating IDs for subdocuments
+}, { _id: false });
 
 // Main User Schema
 const userSchema = new mongoose.Schema({
@@ -63,20 +56,29 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Phone number is required'],
     unique: true,
-    trim: true
+    trim: true,
+    minlength: 10,
   },
   password: {
     type: String,
     required: [true, 'Password is required'],
     minlength: 8
   },
+  // Add these new fields for Google authentication
+  googleId: {
+    type: String,
+    sparse: true
+  },
+  profilePicture: {
+    type: String
+  },
   isAdmin: {
     type: Boolean,
     default: false
   },
   addresses: [addressSchema],
-  cart: [cartItemSchema],  // Stores user's cart items
-  wishlist: [{  // Optional: If you want a wishlist feature
+  cart: [cartItemSchema],
+  wishlist: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Product'
   }],
@@ -84,12 +86,14 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-}, {
+},
+{
   timestamps: true
 });
 
 // Indexes for faster queries
 userSchema.index({ email: 1, phone: 1 });
+userSchema.index({ googleId: 1 }, { sparse: true });
 
 const User = mongoose.model('User', userSchema);
 

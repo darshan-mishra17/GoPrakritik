@@ -48,7 +48,7 @@ export default function Navbar({ openSidebar }) {
   // };
 
   const handleProfileClick = () => {
-    navigate('/profile');
+    navigate(`/profile/${user._id}`);
   };
   
   return (
