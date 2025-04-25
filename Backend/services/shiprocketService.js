@@ -1,53 +1,33 @@
-// services/shiprocketService.js
+import axios from 'axios';
+import dotenv from 'dotenv';
 
-const axios = require('axios');
+dotenv.config();
 
-const SHIPROCKET_API_URL = 'https://apiv2.shiprocket.in/v1/external';
-const SHIPROCKET_EMAIL = process.env.SHIPROCKET_EMAIL;
-const SHIPROCKET_PASSWORD = process.env.SHIPROCKET_PASSWORD;
+const SHIPROCKET_API = 'https://apiv2.shiprocket.in/v1/external';
+let token = null;
 
-let authToken = null;
-
-// Function to authenticate and retrieve token
-const authenticate = async () => {
-  try {
-    const response = await axios.post(`${SHIPROCKET_API_URL}/auth/login`, {
-      email: SHIPROCKET_EMAIL,
-      password: SHIPROCKET_PASSWORD,
-    });
-    authToken = response.data.token;
-    return authToken;
-  } catch (error) {
-    console.error('Shiprocket Authentication Error:', error.response.data);
-    throw new Error('Failed to authenticate with Shiprocket');
-  }
+export const authenticate = async () => {
+  if (token) return token;
+  const res = await axios.post(`${SHIPROCKET_API}/auth/login`, {
+    email: process.env.SHIPROCKET_EMAIL,
+    password: process.env.SHIPROCKET_PASSWORD
+  });
+  token = res.data.token;
+  return token;
 };
 
-// Function to create an order
-const createOrder = async (orderData) => {
-  try {
-    // Ensure authentication
-    if (!authToken) {
-      await authenticate();
-    }
-
-    const response = await axios.post(
-      `${SHIPROCKET_API_URL}/orders/create/adhoc`,
-      orderData,
-      {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      }
-    );
-
-    return response.data;
-  } catch (error) {
-    console.error('Shiprocket Order Creation Error:', error.response.data);
-    throw new Error('Failed to create order with Shiprocket');
-  }
+export const createOrder = async (data) => {
+  const auth = await authenticate();
+  const res = await axios.post(`${SHIPROCKET_API}/orders/create/adhoc`, data, {
+    headers: { Authorization: `Bearer ${auth}` }
+  });
+  return res.data;
 };
 
-module.exports = {
-  createOrder,
+export const getLabel = async (shipmentId) => {
+  const auth = await authenticate();
+  const res = await axios.get(`${SHIPROCKET_API}/courier/generate/label?shipment_id=${shipmentId}`, {
+    headers: { Authorization: `Bearer ${auth}` }
+  });
+  return res.data;
 };

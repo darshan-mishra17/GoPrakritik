@@ -1,64 +1,44 @@
 import mongoose from 'mongoose';
-const { Schema } = mongoose;
 
-// Ordered Item Subschema
-const orderItemSchema = new Schema({
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-  productName: { type: String, required: true },
-  unit: { type: String, required: true },           // e.g., "1 L", "500g"
-  price: { type: Number, required: true },          // price at the time of purchase
-  quantity: { type: Number, required: true },
-  productType: { type: String },                    // Product / SpiceProduct / AttarProduct
-}, { _id: false });
-
-const deliveryAddressSchema = new Schema({
-  fullName: { type: String, required: true },
-  phone: { type: String, required: true },
-  pincode: { type: String, required: true },
-  house: { type: String, required: true },
-  area: { type: String, required: true },
-  landmark: { type: String },
-  city: { type: String, required: true },
-  state: { type: String, required: true },
-  type: { type: String, enum: ['Home', 'Work'], default: 'Home' }
-}, { _id: false });
-
-const orderSchema = new Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  items: [orderItemSchema],
-  deliveryAddress: deliveryAddressSchema,
-  totalAmount: {
-    type: Number,
-    required: true
-  },
-  paymentStatus: {
+const orderSchema = new mongoose.Schema({
+  customerName: String,
+  email: String,
+  phone: String,
+  address: String,
+  city: String,
+  state: String,
+  pincode: String,
+  country: {
     type: String,
-    enum: ['Pending', 'Paid', 'Failed'],
-    default: 'Pending'
+    default: "India"
   },
-  deliveryStatus: {
+  pickupLocation: {
     type: String,
-    enum: ['Processing', 'Shipped', 'Delivered', 'Cancelled'],
-    default: 'Processing'
+    default: "Primary"
   },
+  items: [
+    {
+      name: String,
+      sku: String,
+      quantity: Number,
+      price: Number
+    }
+  ],
+  subTotal: Number,
+  shippingCharges: Number,
   paymentMethod: {
     type: String,
-    enum: ['COD', 'Online'],
-    default: 'COD'
+    enum: ["COD", "Prepaid"]
   },
-  orderDate: {
-    type: Date,
-    default: Date.now
+  package: {
+    length: Number,
+    breadth: Number,
+    height: Number,
+    weight: Number
   },
-  deliveredAt: {
-    type: Date
-  }
+  shiprocketOrderId: String,
+  shipmentId: String,
+  trackingUrl: String
 }, { timestamps: true });
 
-const Order = mongoose.model('Order', orderSchema);
-
-export default Order;
+export default mongoose.model("Order", orderSchema);
