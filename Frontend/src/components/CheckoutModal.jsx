@@ -312,7 +312,6 @@ const CheckoutModal = ({ isOpen, onClose }) => {
             </div>
           </div>
         </div>
-        
         <div 
           className="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50" 
           style={{ 
@@ -538,7 +537,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                             </div>
                           </div>
                         </div>
-                        
+  
                         <div>
                           <h4 className="text-sm font-medium text-gray-700 mb-2">Order Summary</h4>
                           <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
@@ -588,7 +587,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-center space-x-4 py-2">
                     <div className="flex items-center text-gray-500 text-xs">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -605,7 +604,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                   </div>
                 </div>
               )}
-              
+
               <div className="mt-6 flex items-center justify-between">
                 {step === 2 && (
                   <button
