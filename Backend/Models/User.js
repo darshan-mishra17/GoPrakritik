@@ -67,7 +67,7 @@ const userSchema = new mongoose.Schema({
   // Add these new fields for Google authentication
   googleId: {
     type: String,
-    sparse: true
+    // sparse: true
   },
   profilePicture: {
     type: String
