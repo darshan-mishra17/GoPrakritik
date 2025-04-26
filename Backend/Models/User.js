@@ -64,7 +64,6 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: 8
   },
-  // Add these new fields for Google authentication
   googleId: {
     type: String,
     // sparse: true
@@ -91,7 +90,6 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for faster queries
 userSchema.index({ email: 1, phone: 1 });
 userSchema.index({ googleId: 1 }, { sparse: true });
 

@@ -253,7 +253,7 @@ export function AppProvider({ children }) {
       )
     );
   };
-  
+
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
       if (!item.product.priceVariants || 

@@ -187,11 +187,11 @@ const handleTouchStart = (e) => {
   const handleWheel = (e) => {
     if (!sliderRef.current || isMobile) return;
     
-    e.preventDefault();
+    // e.preventDefault();
     
     // Adjust these values to control scroll speed and feel
     const speedMultiplier = 8; // Increased from 0.5
-    const momentum = 1; // Creates a slight momentum effect
+    const momentum = 1.5; // Creates a slight momentum effect
     
     // Apply momentum to the scroll
     const currentScroll = sliderRef.current.scrollLeft;
