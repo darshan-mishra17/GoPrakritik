@@ -3,15 +3,12 @@ import User from '../Models/User.js';
 
 const authMiddleware = async (req, res, next) => {
   try {
-    // Get token from header
     let token;
     
-    // Check Authorization header first
     const authHeader = req.header('Authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.replace('Bearer ', '');
     } 
-    // Check if token is in cookies
     else if (req.cookies && req.cookies.token) {
       token = req.cookies.token;
     }
@@ -23,7 +20,6 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Find user by id
@@ -35,7 +31,6 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Add user to request
     req.user = {
       id: user._id,
       name: user.name,
@@ -47,7 +42,6 @@ const authMiddleware = async (req, res, next) => {
   } catch (error) {
     console.error('Auth middleware error:', error.message);
     
-    // Handle different types of JWT errors
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
@@ -59,7 +53,6 @@ const authMiddleware = async (req, res, next) => {
         message: 'Token expired'
       });
     }
-    
     res.status(401).json({
       success: false,
       message: 'Authentication failed'
