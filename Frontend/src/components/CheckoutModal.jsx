@@ -282,7 +282,6 @@ const CheckoutModal = ({ isOpen, onClose }) => {
       contentLabel="Checkout Modal"
     >
       <div className="flex flex-col h-full max-h-[90vh]">
-        {/* Header with progress indicator - fixed at top */}
         <div className="sticky top-0 bg-gradient-to-r from-green-600 to-green-700 p-4 border-b border-green-700 z-10 rounded-t-lg text-white">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-semibold">Checkout</h2>
@@ -296,7 +295,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
             </button>
           </div>
           
-          {/* Progress indicator */}
+          
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className={`flex items-center justify-center w-8 h-8 rounded-full ${step >= 1 ? 'bg-white text-green-600' : 'bg-green-400/30 text-white/70'} shadow-md`}>
@@ -405,6 +404,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                           />
                           {errors.area && <p className="text-red-500 text-xs mt-1">{errors.area}</p>}
                         </div>
+
                         
                         <div className="col-span-2">
                           <input
