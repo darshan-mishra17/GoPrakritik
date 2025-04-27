@@ -22,7 +22,6 @@ app.use('/api/products', productRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/orders', orderRoutes);
 
-
 const PORT = process.env.PORT || 5001;
 
 // Connect to DB first, then start server

@@ -1,5 +1,5 @@
+import Order from '../Models/Order.js';
 import User from '../Models/User.js';
-import Order from '../Models/Order.js'; // Assuming you have an Order model
 import mongoose from 'mongoose';
 
 // Error handler utility
@@ -13,7 +13,6 @@ const handleError = (res, error, statusCode = 500) => {
 
 
 const UserController = {
-
   // Create a new user
   createUser: async (req, res) => {
     try {
@@ -57,6 +56,7 @@ const UserController = {
     }
   },
 
+  
   // Get all users (admin only)
   getAllUsers: async (req, res) => {
     try {
