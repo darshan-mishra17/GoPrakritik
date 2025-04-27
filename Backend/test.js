@@ -1,87 +1,42 @@
-import mongoose from 'mongoose';
 import express from 'express';
-import dotenv from 'dotenv';
-
-import User from './Models/User.js';
-import { Product } from './Models/Product.js'; // Make sure this path is correct
 import connectDB from './db/connection.js';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import productRoutes from './Router/productRouter.js';
+import userRoutes from './Router/userRouter.js';
+import orderRoutes from './Router/orderRouter.js';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+  origin: ['http://localhost:5001', 'http://localhost:5173', 'https://accounts.google.com'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// 🚀 Start Shiprocket Mock Server in development mode
+if (process.env.NODE_ENV === 'development') {
+  import('./mocks/shiprocketMock.js').then(({ default: mockRouter }) => {
+    app.use('/mock-shiprocket', mockRouter);
+    console.log('✅ Shiprocket mock server running at /mock-shiprocket');
+  });
+}
+
+// Routes
+app.use('/api/products', productRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/orders', orderRoutes);
 
 const PORT = process.env.PORT || 5001;
 
-const createTestData = async () => {
-  // Create test product
-  const testProduct = await Product.create({
-    productName: "Test Product",
-    category: "Herbal",
-    description: "Test description...",
-    priceVariants: [{ unit: "100g", price: 50 }],
-    benefits: [{ description: "Test benefit" }],
-    organicProcessingMethod: "Test method",
-    traditionalMethods: "Test traditional method",
-    usage: "Test usage"
+// Connect to DB first, then start server
+connectDB().then(() => {
+  app.listen(PORT, '0.0.0.0', () => { 
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
-
-  // Create test user
-  await User.create({
-    name: "Ravi Sharma",
-    email: "ravi.sharma@example.com",
-    phone: "9876543210",
-    password: "testpassword123",
-    addresses: [
-      {
-        fullName: "Ravi Sharma",
-        phone: "9876543210",
-        pincode: "560001",
-        house: "Flat 202",
-        area: "MG Road",
-        landmark: "Near Metro Station",
-        city: "Bangalore",
-        state: "Karnataka",
-        type: "Home"
-      }
-    ],
-    orderHistory: [
-      {
-        orderId: new mongoose.Types.ObjectId(),
-        items: [
-          {
-            productId: testProduct._id,
-            productName: testProduct.productName,
-            unit: testProduct.priceVariants[0].unit,
-            price: testProduct.priceVariants[0].price,
-            quantity: 2,
-            productType: "Product"
-          }
-        ],
-        totalAmount: testProduct.priceVariants[0].price * 2,
-        paymentStatus: "Paid",
-        deliveryStatus: "Delivered",
-        orderDate: new Date("2024-04-01T10:30:00Z")
-      }
-    ],
-    isAdmin: false
-  });
-
-  console.log("Test product and user created successfully");
-};
-
-(async () => {
-  try {
-    await connectDB();
-    console.log('Database connected successfully');
-
-    await createTestData();
-
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (err) {
-    console.error('Initialization failed:', err);
-    process.exit(1);
-  }
-})();
+}).catch(err => {
+  console.error('Database connection failed', err);
+});
