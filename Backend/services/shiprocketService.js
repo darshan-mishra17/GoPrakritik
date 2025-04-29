@@ -1,62 +1,76 @@
+// services/shiprocketService.js
 import axios from 'axios';
-import dotenv from 'dotenv';
 
-dotenv.config();
+const SHIPROCKET_API_KEY = process.env.SHIPROCKET_API_KEY;
+const SHIPROCKET_SECRET = process.env.SHIPROCKET_SECRET;
+const SHIPROCKET_BASE_URL = 'https://apiv2.shiprocket.in/v1/external';
 
-const SHIPROCKET_API = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:5001/mock-shiprocket/v1/external'
-  : 'https://apiv2.shiprocket.in/v1/external';
+let authToken = '';
 
-
-//const SHIPROCKET_API = 'https://apiv2.shiprocket.in/v1/external';
-let token = null;
-
-// Create a custom axios instance
-const shiprocketAxios = axios.create({
-  baseURL: SHIPROCKET_API,
-  timeout: 10000, // 10 seconds timeout
-});
-
-// Handle auth token
-export const authenticate = async () => {
+// Function to authenticate with Shiprocket
+async function authenticate() {
   try {
-    if (token) return token;
-    const res = await shiprocketAxios.post('/auth/login', {
-      email: process.env.SHIPROCKET_EMAIL,
-      password: process.env.SHIPROCKET_PASSWORD
+    const response = await axios.post(`${SHIPROCKET_BASE_URL}/auth/login`, {
+      email: 'your_shiprocket_email',
+      password: 'your_shiprocket_password'
     });
-    token = res.data.token;
-    return token;
+    authToken = response.data.token;
+    return authToken;
   } catch (error) {
-    console.error('Authentication error:', error.message);
-    throw new Error('Failed to authenticate with Shiprocket');
+    console.error('Shiprocket authentication failed:', error.response?.data || error.message);
+    throw error;
   }
-};
+}
 
-// Create a new order
-export const createOrder = async (data) => {
-  try {
-    const auth = await authenticate();
-    const res = await shiprocketAxios.post('/orders/create/adhoc', data, {
-      headers: { Authorization: `Bearer ${auth}` }
-    });
-    return res.data;
-  } catch (error) {
-    console.error('Create order error:', error.response?.data || error.message);
-    throw new Error('Failed to create order on Shiprocket');
+// Function to create shipment
+async function createShipment(orderData) {
+  if (!authToken) {
+    await authenticate();
   }
-};
+  
+  try {
+    const response = await axios.post(`${SHIPROCKET_BASE_URL}/orders/create/adhoc`, orderData, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Shiprocket shipment creation failed:', error.response?.data || error.message);
+    throw error;
+  }
+}
 
-// Get label/tracking
-export const getLabel = async (shipmentId) => {
-  try {
-    const auth = await authenticate();
-    const res = await shiprocketAxios.get(`/courier/generate/label?shipment_id=${shipmentId}`, {
-      headers: { Authorization: `Bearer ${auth}` }
-    });
-    return res.data;
-  } catch (error) {
-    console.error('Get label error:', error.response?.data || error.message);
-    throw new Error('Failed to generate label from Shiprocket');
+// Function to get shipping rates
+async function getShippingRates(pickupPostcode, deliveryPostcode, weight, dimensions) {
+  if (!authToken) {
+    await authenticate();
   }
+
+  try {
+    const response = await axios.post(`${SHIPROCKET_BASE_URL}/courier/serviceability`, {
+      pickup_postcode: pickupPostcode,
+      delivery_postcode: deliveryPostcode,
+      weight: weight,
+      length: dimensions.length,
+      width: dimensions.width,
+      height: dimensions.height
+    }, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to get shipping rates:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+export default {
+  authenticate,
+  createShipment,
+  getShippingRates
 };

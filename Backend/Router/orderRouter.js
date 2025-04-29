@@ -1,7 +1,9 @@
+// routes/orderRoutes.js
 import express from 'express';
-import { placeOrder } from '../Controller/orderController.js';
-
 const router = express.Router();
-router.post('/', placeOrder);
+import createOrder from '../Controller/orderController.js'
+//import authMiddleware from '../Middleware/authMiddleware.js';
+
+router.post('/', createOrder);
 
 export default router;
