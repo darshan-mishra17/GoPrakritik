@@ -38,9 +38,8 @@ router.route('/:userId/orders')
 router.route('/:userId/orders/:orderId')
   .get(authMiddleware, UserController.getSingleOrder);
 
-
 router.route('/:userId/cart')
-  .get(authMiddleware, CartController.getCart)       
+  .get(CartController.getCart)       
   .put(authMiddleware, CartController.updateCart)     
   .delete(authMiddleware, CartController.deleteCartItem); 
 

@@ -11,7 +11,6 @@ const handleError = (res, error, statusCode = 500) => {
   });
 };
 
-
 const UserController = {
   // Create a new user
   createUser: async (req, res) => {
@@ -31,7 +30,7 @@ const UserController = {
           message: 'User with given email or phone already exists'
         });
       }
-  
+      
       const newUser = await User.create({
         name,
         email,
@@ -55,7 +54,6 @@ const UserController = {
       handleError(res, error);
     }
   },
-
   
   // Get all users (admin only)
   getAllUsers: async (req, res) => {
@@ -77,7 +75,6 @@ const UserController = {
     try {
       const { id } = req.params;
       
-      // Check if ID is valid
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
@@ -91,14 +88,6 @@ const UserController = {
         return res.status(404).json({
           success: false,
           message: 'User not found'
-        });
-      }
-      
-      // Check if user is requesting their own data or is admin
-      if (req.user.id !== id && !req.user.isAdmin) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only view your own profile'
         });
       }
       
@@ -117,7 +106,6 @@ const UserController = {
       const { id } = req.params;
       const { name, phone } = req.body;
       
-      // Check if ID is valid
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
@@ -125,15 +113,6 @@ const UserController = {
         });
       }
       
-      // Check if user is updating their own data or is admin
-      if (req.user.id !== id && !req.user.isAdmin) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only update your own profile'
-        });
-      }
-      
-      // Find user and update
       const updatedUser = await User.findByIdAndUpdate(
         id,
         { 
@@ -167,7 +146,6 @@ const UserController = {
     try {
       const { id } = req.params;
       
-      // Check if ID is valid
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           success: false,
@@ -199,19 +177,10 @@ const UserController = {
       const { userId } = req.params;
       const addressData = req.body;
       
-      // Check if userId is valid
       if (!mongoose.Types.ObjectId.isValid(userId)) {
         return res.status(400).json({
           success: false,
           message: 'Invalid user ID format'
-        });
-      }
-      
-      // Check if user is adding to their own profile
-      if (req.user.id !== userId && !req.user.isAdmin) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only add addresses to your own profile'
         });
       }
       
@@ -262,19 +231,10 @@ const UserController = {
       const { userId, addressId } = req.params;
       const addressData = req.body;
       
-      // Check if IDs are valid
       if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(addressId)) {
         return res.status(400).json({
           success: false,
           message: 'Invalid ID format'
-        });
-      }
-      
-      // Check if user is updating their own address
-      if (req.user.id !== userId && !req.user.isAdmin) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only update your own addresses'
         });
       }
       
@@ -310,19 +270,10 @@ const UserController = {
     try {
       const { userId, addressId } = req.params;
       
-      // Check if IDs are valid
       if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(addressId)) {
         return res.status(400).json({
           success: false,
           message: 'Invalid ID format'
-        });
-      }
-      
-      // Check if user is deleting their own address
-      if (req.user.id !== userId && !req.user.isAdmin) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only delete your own addresses'
         });
       }
       
@@ -354,19 +305,10 @@ const UserController = {
     try {
       const { userId } = req.params;
       
-      // Check if userId is valid
       if (!mongoose.Types.ObjectId.isValid(userId)) {
         return res.status(400).json({
           success: false,
           message: 'Invalid user ID format'
-        });
-      }
-      
-      // Check if user is requesting their own orders or is admin
-      if (req.user.id !== userId && !req.user.isAdmin) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only view your own orders'
         });
       }
       
@@ -390,19 +332,10 @@ const UserController = {
     try {
       const { userId, orderId } = req.params;
       
-      // Check if IDs are valid
       if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(orderId)) {
         return res.status(400).json({
           success: false,
           message: 'Invalid ID format'
-        });
-      }
-      
-      // Check if user is requesting their own order or is admin
-      if (req.user.id !== userId && !req.user.isAdmin) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only view your own orders'
         });
       }
       
