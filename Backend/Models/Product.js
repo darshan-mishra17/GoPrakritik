@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 // Sub-schema for pricing variants
 const priceVariantSchema = new Schema({
-  unit: { type: String, required: true }, // e.g., "1 L", "500g"
+  unit: { type: String, required: true },
   price: { type: Number, required: true }
 });
 
@@ -45,20 +45,12 @@ const productSchema = new Schema({
   isFeatured: {
     type: Boolean,
     default: false
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
   }
 }, { timestamps: true });
 
 // For products with variant benefits like spices
 const variantBenefitSchema = new Schema({
-  variantName: { type: String, required: true }, // e.g., "chilli", "turmeric"
+  variantName: { type: String, required: true },
   benefits: [benefitSchema]
 });
 
@@ -77,9 +69,13 @@ const attarProductSchema = new Schema({
   }
 });
 
-// Create models
+// Create base Product model
 const Product = mongoose.model('Product', productSchema);
+
+// Create discriminators
 const SpiceProduct = Product.discriminator('SpiceProduct', spiceProductSchema);
 const AttarProduct = Product.discriminator('AttarProduct', attarProductSchema);
 
-export { Product, SpiceProduct, AttarProduct };
+// Export all models
+export default Product;
+export { SpiceProduct, AttarProduct };

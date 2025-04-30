@@ -1,48 +1,116 @@
+// controllers/orderController.js
 import Order from '../Models/Order.js';
-import { createOrder, getLabel } from '../services/shiprocketService.js';
+import Product from '../Models/Product.js';
+import shiprocketService from '../services/shiprocketService.js';
 
-export const placeOrder = async (req, res) => {
+/**
+ * @desc    Create new order
+ * @route   POST /api/orders
+ * @access  Private
+ */
+const createOrder = async (req, res) => {
   try {
-    const orderData = req.body;
-    const newOrder = await Order.create(orderData);
+    const { 
+      orderItems, 
+      shippingAddress, 
+      paymentMethod, 
+      itemsPrice, 
+      taxPrice, 
+      shippingPrice, 
+      totalPrice 
+    } = req.body;
 
+    if (!orderItems || orderItems.length === 0) {
+      return res.status(400).json({ success: false, message: 'No order items' });
+    }
+
+    // Calculate order weight
+    let totalWeight = 0;
+    for (const item of orderItems) {
+      const product = await Product.findById(item.product);
+      if (!product) {
+        return res.status(404).json({ 
+          success: false, 
+          message: `Product ${item.product} not found` 
+        });
+      }
+      totalWeight += product.weight * item.qty;
+    }
+
+    // Create order
+    const order = new Order({
+      user: req.user._id,
+      orderItems,
+      shippingAddress,
+      paymentMethod,
+      itemsPrice,
+      taxPrice,
+      shippingPrice,
+      totalPrice,
+      totalWeight
+    });
+
+    const createdOrder = await order.save();
+
+    // Prepare Shiprocket payload
     const shiprocketPayload = {
-      order_id: newOrder._id.toString(),
-      order_date: new Date().toISOString().split('T')[0],
-      pickup_location: orderData.pickupLocation || "Primary",
-      billing_customer_name: orderData.customerName,
-      billing_address: orderData.address,
-      billing_city: orderData.city,
-      billing_pincode: orderData.pincode,
-      billing_state: orderData.state,
-      billing_country: "India",
-      billing_email: orderData.email,
-      billing_phone: orderData.phone,
-      order_items: orderData.items.map(i => ({
-        name: i.name,
-        sku: i.sku,
-        units: i.quantity,
-        selling_price: i.price
+      order_id: createdOrder._id.toString(),
+      order_date: new Date().toISOString(),
+      pickup_location: 'Primary',
+      billing_customer_name: shippingAddress.fullName,
+      billing_address: shippingAddress.address,
+      billing_address_2: shippingAddress.address2 || '',
+      billing_city: shippingAddress.city,
+      billing_pincode: shippingAddress.postalCode,
+      billing_state: shippingAddress.state,
+      billing_country: 'India',
+      billing_email: req.user.email,
+      billing_phone: shippingAddress.phone,
+      shipping_is_billing: true,
+      order_items: await Promise.all(orderItems.map(async (item) => {
+        const product = await Product.findById(item.product);
+        return {
+          name: product.name,
+          sku: product.sku || '',
+          units: item.qty,
+          selling_price: item.price,
+          discount: '',
+          tax: '',
+          hsn: product.hsn || ''
+        };
       })),
-      payment_method: orderData.paymentMethod,
-      shipping_charges: orderData.shippingCharges,
-      sub_total: orderData.subTotal,
-      length: orderData.package.length,
-      breadth: orderData.package.breadth,
-      height: orderData.package.height,
-      weight: orderData.package.weight
+      payment_method: paymentMethod,
+      shipping_charges: shippingPrice,
+      total_discount: 0,
+      sub_total: itemsPrice,
+      length: 10,
+      breadth: 10,
+      height: 10,
+      weight: totalWeight
     };
 
-    const srResponse = await createOrder(shiprocketPayload);
-    const labelInfo = await getLabel(srResponse.shipment_id);
+    // Create shipment in Shiprocket
+    const shipment = await shiprocketService.createShipment(shiprocketPayload);
 
-    newOrder.shiprocketOrderId = srResponse.order_id;
-    newOrder.shipmentId = srResponse.shipment_id;
-    newOrder.trackingUrl = labelInfo.label_url;
-    await newOrder.save();
+    // Update order with shipment details
+    createdOrder.shipmentId = shipment.shipment_id;
+    createdOrder.airwayBillNumber = shipment.awb;
+    await createdOrder.save();
 
-    res.status(200).json({ success: true, order: newOrder });
+    return res.status(201).json({
+      success: true,
+      order: createdOrder,
+      shipmentDetails: shipment
+    });
+
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Error creating order:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error',
+      error: error.message 
+    });
   }
 };
+
+export default createOrder;
