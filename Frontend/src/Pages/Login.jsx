@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import Navbar from '../components/Navbar';
+import { useUser } from '../components/CartContext'; // adjust path if needed
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login, isAuthenticated, user } = useUser();
   const [isSignIn, setIsSignIn] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
@@ -18,32 +20,11 @@ export default function Login() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  // Check if user is already logged in
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const userData = localStorage.getItem('user');
-      const user = userData ? JSON.parse(userData) : null;
-
-      if (user && user._id) {
-        navigate(`/shop/${user._id}`);
-      } else {
-        navigate('/shop');
-      }
+    if (isAuthenticated && user) {
+      navigate(`/shop/${user._id}`);
     }
-  }, [navigate]);
-
-  // Auto-dismiss the banner after 5 seconds
-  useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError(null);
-        setSuccess(null);
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [error, success]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -53,19 +34,6 @@ export default function Login() {
     }));
   };
 
-  const toggleForm = () => {
-    setIsSignIn(!isSignIn);
-    setError(null);
-    setSuccess(null);
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      phone: ''
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -73,82 +41,29 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Validation
       if (!isSignIn && formData.password !== formData.confirmPassword) {
         setError("Passwords don't match");
         setLoading(false);
         return;
       }
-
-      // API endpoints based on action
-      const endpoint = isSignIn
-        ? 'http://localhost:8090/api/user/login'
-        : 'http://localhost:8090/api/user/register';
-
-      // Prepare request data
-      const requestData = isSignIn
-        ? {
-          email: formData.email,
-          password: formData.password
-        }
-        : {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone
-        };
-
-      // Make API request
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Authentication failed');
-      }
-
-      // Handle successful response
+      const credentials = isSignIn
+        ? { email: formData.email, password: formData.password }
+        : { name: formData.name, email: formData.email, password: formData.password, phone: formData.phone };
+      const success = await login(credentials);
+      if (!success) throw new Error('Authentication failed');
       setSuccess(isSignIn ? "Successfully signed in!" : "Account created successfully!");
-
-      // Store token in localStorage
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
-
-      // Store user data
-      if (data.data) {
-        localStorage.setItem('user', JSON.stringify(data.data));
-      }
-
-      // Check if there's a redirect path saved
-      const redirectPath = localStorage.getItem('redirectAfterLogin');
-      
-      // Redirect to user-specific shop after a short delay
       setTimeout(() => {
-        if (redirectPath) {
-          localStorage.removeItem('redirectAfterLogin');
-          navigate(redirectPath);
-        } else if (data.data && data.data._id) {
-          navigate(`/shop/${data.data._id}`);
-        } else {
-          navigate('/shop');
-        }
+        if (user && user._id) navigate(`/shop/${user._id}`);
+        else navigate('/shop');
       }, 1500);
     } catch (err) {
-      console.error('Error during authentication:', err);
       setError(err.message || 'Failed to connect to server. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Google login success handler
+// Google login success handler
   const handleGoogleLoginSuccess = async (credentialResponse) => {
     setLoading(true);
     setError(null);
@@ -184,7 +99,6 @@ export default function Login() {
         localStorage.setItem('user', JSON.stringify(data.data));
       }
 
-      // Check if there's a redirect path saved
       const redirectPath = localStorage.getItem('redirectAfterLogin');
       
       // Redirect after a short delay
@@ -212,8 +126,10 @@ export default function Login() {
     setError('Google sign-in was unsuccessful. Please try again.');
   };
 
+
+  // ...rest of your Google login and UI code remains unchanged...
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+   <div className="relative w-full h-screen overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
@@ -355,7 +271,7 @@ export default function Login() {
 
                 <div className="text-center mt-3">
                   <button
-                    onClick={toggleForm}
+                    onClick={handleSubmit}
                     className="text-white/80 hover:text-white text-xs"
                   >
                     {isSignIn
@@ -435,5 +351,6 @@ export default function Login() {
         }
       `}</style>
     </div>
+
   );
 }

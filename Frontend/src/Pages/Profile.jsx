@@ -1,60 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useUser } from '../components/CartContext'; 
 import { User, Package, Clock, ShoppingBag, MapPin, Phone, Mail, Edit, ChevronDown, ChevronUp, Home as HomeIcon, Briefcase, LogOut } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, logout, loading } = useUser();
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('profile');
   const [expandedOrder, setExpandedOrder] = useState(null);
 
   useEffect(() => {
-    // Check if user is logged in
-    const userData = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    if (!userData || !token) {
+    if (!user) {
       navigate('/login');
       return;
     }
-    
-    setUser(JSON.parse(userData));
-    
     // Fetch user orders
-    fetchOrders(JSON.parse(userData)._id, token);
-  }, [navigate]);
+    fetchOrders(user._id);
+    // eslint-disable-next-line
+  }, [user, navigate]);
 
-  const fetchOrders = async (userId, token) => {
+  const fetchOrders = async (userId) => {
     try {
-      setLoading(true);
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/orders/user/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch orders');
-      }
-      
+      if (!response.ok) throw new Error('Failed to fetch orders');
       const data = await response.json();
       setOrders(data);
     } catch (error) {
       console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const toggleOrderDetails = (orderId) => {
-    if (expandedOrder === orderId) {
-      setExpandedOrder(null);
-    } else {
-      setExpandedOrder(orderId);
-    }
+    setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
   const formatDate = (dateString) => {
@@ -64,33 +48,15 @@ export default function ProfilePage() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Delivered':
-        return 'bg-green-500 text-white';
-      case 'Shipped':
-        return 'bg-blue-500 text-white';
-      case 'Processing':
-        return 'bg-yellow-500 text-white';
-      case 'Cancelled':
-        return 'bg-red-500 text-white';
-      case 'Paid':
-        return 'bg-green-500 text-white';
-      case 'Pending':
-        return 'bg-yellow-500 text-white';
-      case 'Failed':
-        return 'bg-red-500 text-white';
-      default:
-        return 'bg-gray-500 text-white';
+      case 'Delivered': return 'bg-green-500 text-white';
+      case 'Shipped': return 'bg-blue-500 text-white';
+      case 'Processing': return 'bg-yellow-500 text-white';
+      case 'Cancelled': return 'bg-red-500 text-white';
+      case 'Paid': return 'bg-green-500 text-white';
+      case 'Pending': return 'bg-yellow-500 text-white';
+      case 'Failed': return 'bg-red-500 text-white';
+      default: return 'bg-gray-500 text-white';
     }
-  };
-
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('cart');
-    window.location.reload();
-
-    navigate('/');
   };
 
   return (
@@ -102,7 +68,6 @@ export default function ProfilePage() {
           zIndex: -1,
         }}
       />
-      
       <div className="flex items-center justify-center w-full h-full">
         <div className="backdrop-blur-sm bg-green-700/90 rounded-3xl md:rounded-3xl shadow-xl w-full h-full max-w-[95%] sm:max-w-[90%] max-h-[95vh] sm:max-h-[90vh] flex flex-col py-2 md:py-4">
           <Navbar />
@@ -128,7 +93,7 @@ export default function ProfilePage() {
                     </p>
                     <div className="flex flex-wrap justify-center md:justify-start gap-2">
                       <button
-                        onClick={handleLogout}
+                        onClick={logout}
                         className="group relative overflow-hidden bg-transparent text-white px-4 py-1.5 rounded-full font-semibold text-sm transition duration-500 inline-flex items-center justify-center"
                       >
                         <span className="absolute inset-0 border-2 border-white opacity-100 rounded-full transform scale-100 group-hover:scale-110 transition-transform duration-500"></span>
@@ -224,6 +189,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
+                      {/* Rest of the profile tab content */}
                       <div className="bg-white/10 rounded-xl overflow-hidden">
                         <div className="px-6 py-4 flex justify-between items-center border-b border-white/20">
                           <h3 className="text-xl font-semibold text-white flex items-center gap-2">
@@ -300,6 +266,7 @@ export default function ProfilePage() {
 
                   {activeTab === 'orders' && (
                     <div className="space-y-6">
+                      {/* Orders tab content */}
                       <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6">
                         <ShoppingBag className="w-6 h-6 text-green-400" />
                         Your Orders

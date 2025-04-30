@@ -1,6 +1,6 @@
 import express from 'express';
 import UserController from '../Controller/userController.js';
-import CartController from '../Controller/cartController.js'; // ⬅️ import CartController
+import CartController from '../Controller/cartController.js'; 
 import AuthController from '../Controller/AuthController.js';
 import GoogleAuthController from '../Controller/googleAuthController.js';
 import authMiddleware from '../Middleware/authMiddleware.js';
@@ -38,9 +38,8 @@ router.route('/:userId/orders')
 router.route('/:userId/orders/:orderId')
   .get(authMiddleware, UserController.getSingleOrder);
 
-
 router.route('/:userId/cart')
-  .get(authMiddleware, CartController.getCart)       
+  .get(CartController.getCart)       
   .put(authMiddleware, CartController.updateCart)     
   .delete(authMiddleware, CartController.deleteCartItem); 
 

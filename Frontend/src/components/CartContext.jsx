@@ -1,49 +1,43 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Create both contexts
 const CartContext = createContext();
 const UserContext = createContext();
 
-// Custom hooks to use the contexts
 export function useCart() {
   return useContext(CartContext);
 }
-
 export function useUser() {
   return useContext(UserContext);
 }
 
 export function AppProvider({ children }) {
-  // Cart state
   const [cartItems, setCartItems] = useState(() => {
     try {
       const savedCart = localStorage.getItem('cart');
       return savedCart ? JSON.parse(savedCart) : [];
-    } catch (error) {
-      console.error("Failed to parse cart from localStorage:", error);
+    } catch {
       return [];
     }
   });
-
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Fetch user data with proper error handling
+  // Fetch user and cart from DB on login
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      
-      // Check if token exists before making request
       const token = localStorage.getItem('token');
-      if (!token) {
+      const userStr = localStorage.getItem('user');
+      if (!token || !userStr) {
         setIsAuthenticated(false);
         setLoading(false);
         return null;
       }
-      
-      const response = await fetch('http://localhost:8090/api/user', {
+      const userObj = JSON.parse(userStr);
+
+      const response = await fetch(`http://localhost:8090/api/user/${userObj._id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -53,8 +47,7 @@ export function AppProvider({ children }) {
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          // Token is invalid or expired
+        if (response.status === 401 || response.status === 403) {
           localStorage.removeItem('token');
           setIsAuthenticated(false);
           throw new Error('Authentication failed - please log in again');
@@ -65,17 +58,50 @@ export function AppProvider({ children }) {
       const userData = await response.json();
       setUser(userData);
       setIsAuthenticated(true);
-      
-      // If user has a cart in their profile, use that
-      if (userData.cart && userData.cart.length > 0) {
-        setCartItems(userData.cart);
+
+      // Fetch cart from DB
+      if (userData._id) {
+        try {
+          const cartResponse = await fetch(`http://localhost:8090/api/user/${userData._id}/cart`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            credentials: 'include'
+          });
+          if (cartResponse.ok) {
+            const cartData = await cartResponse.json();
+            if (cartData.success && cartData.cart && cartData.cart.length > 0) {
+              const transformedCart = await Promise.all(cartData.cart.map(async (item) => {
+                const productResponse = await fetch(`http://localhost:8090/api/products/${item.productId}`, {
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  },
+                  credentials: 'include'
+                });
+                if (!productResponse.ok) return null;
+                const product = await productResponse.json();
+                return {
+                  product: product.data,
+                  quantity: item.quantity,
+                  selectedVariantIndex: item.selectedVariantIndex
+                };
+              }));
+              setCartItems(transformedCart.filter(item => item !== null));
+            } else {
+              setCartItems([]);
+            }
+          }
+        } catch (cartError) {
+          console.error('Error fetching cart:', cartError);
+        }
       }
-      
       return userData;
     } catch (err) {
       setError(err.message);
       setIsAuthenticated(false);
-      console.error('Error fetching user data:', err);
+      setUser(null);
       return null;
     } finally {
       setLoading(false);
@@ -86,139 +112,145 @@ export function AppProvider({ children }) {
   const login = async (credentials) => {
     try {
       setLoading(true);
-      
-      const response = await fetch('http://localhost:8090/api/login', {
+      const response = await fetch('http://localhost:8090/api/user/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(credentials)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+        credentials: 'include'
       });
-
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
       const data = await response.json();
-      
-      // Store token and set authenticated state
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
       localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('user', JSON.stringify(data.data));
       setIsAuthenticated(true);
-      setUser(data.user);
-      
-      // Fetch user data after successful login
+      setUser(data.data);
       await fetchUserData();
-      
       return true;
     } catch (err) {
       setError(err.message);
-      console.error('Login error:', err);
+      setIsAuthenticated(false);
+      setUser(null);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // Logout function
-  const logout = () => {
-    // Clear user state
-    setUser(null);
-    setIsAuthenticated(false);
-    
-    // Clear localStorage items related to authentication
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    
-    // Clear cart state
-    setCartItems([]);
-    localStorage.removeItem('cart');
-  };
-
-  // Update user data
-  const updateUser = async (userData) => {
+  // Google login function (for context)
+  const googleLogin = async (credential) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-      
-      const response = await fetch('http://localhost:8090/api/user', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(userData),
+      setLoading(true);
+      const response = await fetch('http://localhost:8090/api/user/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
         credentials: 'include'
       });
-
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error('Failed to update user data');
+        throw new Error(data.message || 'Google authentication failed');
       }
-
-      const updatedUser = await response.json();
-      setUser(updatedUser);
-      return updatedUser;
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.data));
+      setIsAuthenticated(true);
+      setUser(data.data);
+      await fetchUserData();
+      return true;
     } catch (err) {
-      console.error('Error updating user:', err);
-      throw err;
+      setError(err.message);
+      setIsAuthenticated(false);
+      setUser(null);
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Save cart to localStorage when it changes
+  // Logout function with cart saving
+  const logout = async () => {
+    try {
+      if (isAuthenticated && user && cartItems.length > 0) {
+        const token = localStorage.getItem('token');
+        const transformedCart = cartItems.map(item => ({
+          productId: item.product._id,
+          quantity: item.quantity,
+          selectedVariantIndex: item.selectedVariantIndex
+        }));
+        await fetch(`http://localhost:8090/api/user/${user._id}/cart`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(transformedCart),
+          credentials: 'include'
+        });
+      }
+    } catch (error) {
+      console.error('Error saving cart on logout:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setCartItems([]);
+      localStorage.removeItem('cart');
+    }
+  };
+
+  // Save cart to localStorage and backend when it changes
   useEffect(() => {
     if (cartItems.length > 0) {
       localStorage.setItem('cart', JSON.stringify(cartItems));
     } else {
       localStorage.removeItem('cart');
     }
-    
-    // If user is authenticated, save cart to database
-    if (isAuthenticated && user) {
-      saveCartToDatabase();
-    }
+    if (isAuthenticated && user) saveCartToDatabase();
+    // eslint-disable-next-line
   }, [cartItems, isAuthenticated, user]);
 
   // Check authentication on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      fetchUserData();
-    } else {
-      setLoading(false);
-    }
+    if (token) fetchUserData();
+    else setLoading(false);
+    // eslint-disable-next-line
   }, []);
 
   const saveCartToDatabase = async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token || !user) return;
-      
-      await fetch(`http://localhost:8090/api/user/${user._id}`, {
+      const transformedCart = cartItems.map(item => ({
+        productId: item.product._id,
+        quantity: item.quantity,
+        selectedVariantIndex: item.selectedVariantIndex
+      }));
+      await fetch(`http://localhost:8090/api/user/${user._id}/cart`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ cart: cartItems }),
+        body: JSON.stringify(transformedCart),
         credentials: 'include'
       });
+      
     } catch (error) {
       console.error('Error saving cart to database:', error);
     }
   };
 
   // Cart functions
-  const addToCart = (product, quantity, selectedVariantIndex) => {
+  const addToCart = async (product, quantity, selectedVariantIndex) => {
     setCartItems(prevItems => {
-      const existingItemIndex = prevItems.findIndex(item => 
-        item.product._id === product._id && 
+      const existingItemIndex = prevItems.findIndex(item =>
+        item.product._id === product._id &&
         item.selectedVariantIndex === selectedVariantIndex
       );
-      
       if (existingItemIndex >= 0) {
-        // Update quantity of existing item
         const updatedItems = [...prevItems];
         updatedItems[existingItemIndex] = {
           ...updatedItems[existingItemIndex],
@@ -226,58 +258,110 @@ export function AppProvider({ children }) {
         };
         return updatedItems;
       } else {
-        // Add new item
         return [...prevItems, { product, quantity, selectedVariantIndex }];
       }
     });
-    
-    return Promise.resolve(true);
+    if (isAuthenticated && user) {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:8090/api/user/${user._id}/cart`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product._id,
+          quantity,
+          selectedVariantIndex
+        }),
+        credentials: 'include'
+      });
+    }
   };
-  
-  const updateCartItemQuantity = (productId, variantIndex, newQuantity) => {
-    if (newQuantity < 1) return; // Prevent quantities less than 1
-    
-    setCartItems(prevItems => 
-      prevItems.map(item => 
+
+  const updateCartItemQuantity = async (productId, variantIndex, newQuantity) => {
+    if (newQuantity < 1) return;
+    setCartItems(prevItems =>
+      prevItems.map(item =>
         (item.product._id === productId && item.selectedVariantIndex === variantIndex)
           ? { ...item, quantity: newQuantity }
           : item
       )
     );
+    if (isAuthenticated && user) {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:8090/api/user/${user._id}/cart`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId,
+          quantity: newQuantity,
+          selectedVariantIndex: variantIndex
+        }),
+        credentials: 'include'
+      });
+    }
   };
-  
-  const removeFromCart = (productId, variantIndex) => {
-    setCartItems(prevItems => 
-      prevItems.filter(item => 
+
+  const removeFromCart = async (productId, variantIndex) => {
+    setCartItems(prevItems =>
+      prevItems.filter(item =>
         !(item.product._id === productId && item.selectedVariantIndex === variantIndex)
       )
     );
+    if (isAuthenticated && user) {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:8090/api/user/${user._id}/cart`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId,
+          selectedVariantIndex: variantIndex
+        }),
+        credentials: 'include'
+      });
+    }
   };
 
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
-      if (!item.product.priceVariants || 
-          !item.product.priceVariants[item.selectedVariantIndex]) {
+      if (!item.product.priceVariants || !item.product.priceVariants[item.selectedVariantIndex]) {
         return total;
       }
-      
       const priceVariant = item.product.priceVariants[item.selectedVariantIndex];
       const priceString = priceVariant.price.toString().replace(/[^\d]/g, '') || "0";
       const price = parseInt(priceString, 10);
       return total + (price * item.quantity);
     }, 0);
   };
-  
+
   const getCartItemCount = () => {
     return cartItems.reduce((count, item) => count + item.quantity, 0);
   };
-  
-  const clearCart = () => {
+
+  const clearCart = async () => {
     setCartItems([]);
     localStorage.removeItem('cart');
+    if (isAuthenticated && user) {
+      const token = localStorage.getItem('token');
+      await fetch(`http://localhost:8090/api/user/${user._id}/cart`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify([]),
+        credentials: 'include'
+      });
+    }
   };
 
-  // Cart context value
   const cartValue = {
     cartItems,
     addToCart,
@@ -288,18 +372,17 @@ export function AppProvider({ children }) {
     clearCart
   };
 
-  // User context value
   const userValue = {
     user,
     loading,
     error,
     isAuthenticated,
     login,
+    googleLogin,
     logout,
-    fetchUserData,
-    updateUser
+    fetchUserData
   };
-  
+
   return (
     <UserContext.Provider value={userValue}>
       <CartContext.Provider value={cartValue}>
@@ -309,7 +392,6 @@ export function AppProvider({ children }) {
   );
 }
 
-// For backward compatibility
 export function CartProvider({ children }) {
   return <AppProvider>{children}</AppProvider>;
 }
