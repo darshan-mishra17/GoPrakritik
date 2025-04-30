@@ -1,4 +1,4 @@
-import { Product, SpiceProduct, AttarProduct } from '../Models/Product.js';
+import Product from '../Models/Product.js';
 import { queryProducts } from '../Middleware/productSearch.js';
 
 // Error handler utility

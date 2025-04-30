@@ -3,25 +3,26 @@ import mongoose from 'mongoose';
 
 const handleError = (res, error, statusCode = 500) => {
   console.error('Error:', error.message);
-  res.status(statusCode).json({ 
-    success: false, 
-    message: error.message || 'Server Error' 
+  res.status(statusCode).json({
+    success: false,
+    message: error.message || 'Server Error'
   });
 };
 
 const cartController = {
+  // GET /api/user/:userId/cart
   getCart: async (req, res) => {
     try {
-      const { id } = req.params;
+      const { userId } = req.params;
 
-      if (!mongoose.Types.ObjectId.isValid(id)) {
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
         return res.status(400).json({
           success: false,
           message: 'Invalid user ID format',
         });
       }
 
-      const user = await User.findById(id).populate('cart.productId');
+      const user = await User.findById(userId).populate('cart.productId');
 
       if (!user) {
         return res.status(404).json({
@@ -39,19 +40,20 @@ const cartController = {
     }
   },
 
+  // PUT /api/user/:userId/cart
   updateCart: async (req, res) => {
     try {
-      const { id } = req.params;
+      const { userId } = req.params;
       const { productId, quantity = 1, selectedVariantIndex = 0 } = req.body;
 
-      if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(productId)) {
+      if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(productId)) {
         return res.status(400).json({
           success: false,
           message: 'Invalid user ID or Product ID',
         });
       }
 
-      const user = await User.findById(id);
+      const user = await User.findById(userId);
 
       if (!user) {
         return res.status(404).json({
@@ -67,11 +69,7 @@ const cartController = {
       if (cartItemIndex > -1) {
         user.cart[cartItemIndex].quantity = quantity;
       } else {
-        user.cart.push({
-          productId,
-          quantity,
-          selectedVariantIndex,
-        });
+        user.cart.push({ productId, quantity, selectedVariantIndex });
       }
 
       await user.save();
@@ -81,25 +79,25 @@ const cartController = {
         message: 'Cart updated successfully',
         cart: user.cart,
       });
-
     } catch (error) {
       handleError(res, error);
     }
   },
 
+  // DELETE /api/user/:userId/cart
   deleteCartItem: async (req, res) => {
     try {
-      const { id } = req.params;
+      const { userId } = req.params;
       const { productId, selectedVariantIndex = 0 } = req.body;
 
-      if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(productId)) {
+      if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(productId)) {
         return res.status(400).json({
           success: false,
           message: 'Invalid user ID or Product ID',
         });
       }
 
-      const user = await User.findById(id);
+      const user = await User.findById(userId);
 
       if (!user) {
         return res.status(404).json({
@@ -128,7 +126,6 @@ const cartController = {
         message: 'Item removed from cart',
         cart: user.cart,
       });
-
     } catch (error) {
       handleError(res, error);
     }

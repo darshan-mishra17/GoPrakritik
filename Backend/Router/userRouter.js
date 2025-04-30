@@ -1,6 +1,6 @@
 import express from 'express';
 import UserController from '../Controller/userController.js';
-import CartController from '../Controller/cartController.js'; // ⬅️ import CartController
+import CartController from '../Controller/cartController.js'; 
 import AuthController from '../Controller/AuthController.js';
 import GoogleAuthController from '../Controller/googleAuthController.js';
 import authMiddleware from '../Middleware/authMiddleware.js';

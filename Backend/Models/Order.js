@@ -1,44 +1,91 @@
-import mongoose from 'mongoose';
+// models/Order.js
+import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema({
-  customerName: String,
-  email: String,
-  phone: String,
-  address: String,
-  city: String,
-  state: String,
-  pincode: String,
-  country: {
-    type: String,
-    default: "India"
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User'
   },
-  pickupLocation: {
-    type: String,
-    default: "Primary"
-  },
-  items: [
-    {
-      name: String,
-      sku: String,
-      quantity: Number,
-      price: Number
+  orderItems: [{
+    name: { type: String, required: true },
+    qty: { type: Number, required: true },
+    image: { type: String, required: true },
+    price: { type: Number, required: true },
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'Product'
     }
-  ],
-  subTotal: Number,
-  shippingCharges: Number,
+  }],
+  shippingAddress: {
+    address: { type: String, required: true },
+    city: { type: String, required: true },
+    postalCode: { type: String, required: true },
+    country: { type: String, required: true },
+    state: { type: String },
+    phone: { type: String }
+  },
   paymentMethod: {
     type: String,
-    enum: ["COD", "Prepaid"]
+    required: true
   },
-  package: {
-    length: Number,
-    breadth: Number,
-    height: Number,
-    weight: Number
+  paymentResult: {
+    id: { type: String },
+    status: { type: String },
+    update_time: { type: String },
+    email_address: { type: String }
   },
-  shiprocketOrderId: String,
-  shipmentId: String,
-  trackingUrl: String
-}, { timestamps: true });
+  itemsPrice: {
+    type: Number,
+    required: true,
+    default: 0.0
+  },
+  taxPrice: {
+    type: Number,
+    required: true,
+    default: 0.0
+  },
+  shippingPrice: {
+    type: Number,
+    required: true,
+    default: 0.0
+  },
+  totalPrice: {
+    type: Number,
+    required: true,
+    default: 0.0
+  },
+  totalWeight: {
+    type: Number,
+    required: true,
+    default: 0.0
+  },
+  isPaid: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  paidAt: {
+    type: Date
+  },
+  isDelivered: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  deliveredAt: {
+    type: Date
+  },
+  shipmentId: {
+    type: String
+  },
+  airwayBillNumber: {
+    type: String
+  }
+}, {
+  timestamps: true
+});
 
-export default mongoose.model("Order", orderSchema);
+const Order = mongoose.model('Order', orderSchema);
+export default Order;
