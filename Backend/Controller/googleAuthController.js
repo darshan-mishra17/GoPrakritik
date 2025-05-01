@@ -46,7 +46,7 @@ const GoogleAuthController = {
         });
       }
 
-      console.log('Google auth payload:', { sub, email, name });
+      // console.log('Google auth payload:', { sub, email, name });
 
       // Check if user already exists
       let user = await User.findOne({ email });
@@ -71,7 +71,7 @@ const GoogleAuthController = {
         });
 
         await user.save();
-        console.log('New Google user created:', user._id);
+        // console.log('New Google user created:', user._id);
       } else if (!user.googleId) {
         // If user exists but doesn't have a googleId, update it
         user.googleId = sub;
@@ -79,7 +79,7 @@ const GoogleAuthController = {
           user.profilePicture = picture;
         }
         await user.save();
-        console.log('Existing user updated with Google ID:', user._id);
+        // console.log('Existing user updated with Google ID:', user._id);
       }
 
       // Generate JWT token

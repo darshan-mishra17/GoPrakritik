@@ -6,7 +6,7 @@ import { useUser } from '../components/CartContext'; // adjust path if needed
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user } = useUser();
+  const { login, googleLogin, isAuthenticated, user } = useUser();
   const [isSignIn, setIsSignIn] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
@@ -54,7 +54,6 @@ export default function Login() {
       setSuccess(isSignIn ? "Successfully signed in!" : "Account created successfully!");
       setTimeout(() => {
         if (user && user._id) navigate(`/shop/${user._id}`);
-        else navigate('/shop');
       }, 1500);
     } catch (err) {
       setError(err.message || 'Failed to connect to server. Please try again.');
@@ -63,57 +62,23 @@ export default function Login() {
     }
   };
 
-// Google login success handler
+  // Google login success handler using context!
   const handleGoogleLoginSuccess = async (credentialResponse) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      // Send the ID token to your backend
-      const response = await fetch('http://localhost:8090/api/user/google-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          credential: credentialResponse.credential 
-        }),
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Google authentication failed');
-      }
-
-      // Handle successful response
+      const success = await googleLogin(credentialResponse.credential);
+      if (!success) throw new Error('Google authentication failed');
       setSuccess("Successfully signed in with Google!");
 
-      // Store token and user data
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
-
-      if (data.data) {
-        localStorage.setItem('user', JSON.stringify(data.data));
-      }
-
-      const redirectPath = localStorage.getItem('redirectAfterLogin');
-      
       // Redirect after a short delay
       setTimeout(() => {
-        if (redirectPath) {
-          localStorage.removeItem('redirectAfterLogin');
-          navigate(redirectPath);
-        } else if (data.data && data.data._id) {
-          navigate(`/shop/${data.data._id}`);
-        } else {
-          navigate('/shop');
+        if (user && user._id) {
+          navigate(`/shop/${user._id}`);
         }
       }, 1500);
     } catch (err) {
-      console.error('Error during Google authentication:', err);
       setError(err.message || 'Failed to authenticate with Google');
     } finally {
       setLoading(false);
@@ -126,10 +91,8 @@ export default function Login() {
     setError('Google sign-in was unsuccessful. Please try again.');
   };
 
-
-  // ...rest of your Google login and UI code remains unchanged...
   return (
-   <div className="relative w-full h-screen overflow-hidden">
+    <div className="relative w-full h-screen overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
@@ -351,6 +314,5 @@ export default function Login() {
         }
       `}</style>
     </div>
-
   );
 }
